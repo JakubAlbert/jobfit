@@ -13,7 +13,10 @@ import {
 import { clearAllData, exportData, importData, ImportError } from '../db/backup'
 import { generateStructured, GeminiError } from '../lib/gemini'
 import { clearSettings, DEFAULT_MODEL, loadSettings, saveSettings } from '../lib/settings'
+import { applyTheme, loadTheme, saveTheme, THEMES, type Theme } from '../lib/theme'
 import { connectionTestPrompt, connectionTestSchema } from '../prompts/connectionTest'
+
+const THEME_LABELS: Record<Theme, string> = { system: 'Podľa systému', light: 'Svetlý', dark: 'Tmavý' }
 
 export function SettingsPage() {
   const [apiKey, setApiKey] = useState(() => loadSettings().apiKey)
@@ -23,6 +26,13 @@ export function SettingsPage() {
   const [testing, setTesting] = useState(false)
   const [dataFeedback, setDataFeedback] = useState<Feedback>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+  const [theme, setTheme] = useState<Theme>(loadTheme)
+
+  function handleTheme(next: Theme) {
+    setTheme(next)
+    saveTheme(next)
+    applyTheme(next)
+  }
 
   function handleSave(event: FormEvent) {
     event.preventDefault()
@@ -162,6 +172,26 @@ export function SettingsPage() {
           </div>
           <FeedbackMessage feedback={keyFeedback} />
         </form>
+      </Section>
+
+      <Section title="Vzhľad">
+        <fieldset>
+          <legend className="sr-only">Téma</legend>
+          <div className="flex flex-wrap gap-4">
+            {THEMES.map((option) => (
+              <label key={option} className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="theme"
+                  value={option}
+                  checked={theme === option}
+                  onChange={() => handleTheme(option)}
+                />
+                {THEME_LABELS[option]}
+              </label>
+            ))}
+          </div>
+        </fieldset>
       </Section>
 
       <Section title="Súkromie">

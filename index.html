@@ -7,6 +7,15 @@
     <meta name="description" content="JobFit porovná tvoje CV s pracovným inzerátom a sleduje stav žiadostí. Beží celé v prehliadači." />
     <meta name="theme-color" content="#0f172a" />
     <title>JobFit – asistent na hľadanie práce</title>
+    <script>
+      // Apply the saved theme before the first paint to avoid a flash (same logic as src/lib/theme.ts).
+      try {
+        var theme = localStorage.getItem('jobfit.theme') || 'system'
+        var dark = theme === 'dark' || (theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.toggle('dark', dark)
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

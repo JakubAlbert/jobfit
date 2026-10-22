@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ApplicationsPage } from './pages/ApplicationsPage'
 import { HomePage } from './pages/HomePage'
 import { PostingsPage } from './pages/PostingsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SettingsPage } from './pages/SettingsPage'
+import { followSystemTheme } from './lib/theme'
 
 // Plain state-based navigation: a few screens do not justify a router dependency yet.
 const PAGES = [
@@ -25,6 +26,8 @@ interface Route {
 function App() {
   const [route, setRoute] = useState<Route>({ page: 'home' })
   const go = (page: PageId, id?: string) => setRoute({ page, id })
+
+  useEffect(followSystemTheme, [])
 
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
