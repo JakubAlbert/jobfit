@@ -50,10 +50,19 @@ describe('analyzePosting', () => {
   it('returns requirements with duplicate skills removed', async () => {
     generate.mockResolvedValueOnce({ ...requirements, mustHaveSkills: ['React', 'react', ' TypeScript '] })
 
-    const result = await analyzePosting(config, 'Hľadáme React developera…')
+    const result = await analyzePosting(config, { title: '', text: 'Hľadáme React developera…' })
 
     expect(result.mustHaveSkills).toEqual(['React', 'TypeScript'])
     expect(generate.mock.calls[0][1].prompt).toContain('Hľadáme React developera…')
+  })
+
+  it('sends the job title and takes the seniority from it when the model misses it', async () => {
+    generate.mockResolvedValueOnce({ ...requirements, seniority: 'unknown' })
+
+    const result = await analyzePosting(config, { title: 'Senior Backend Developer', text: 'Hľadáme kolegu…' })
+
+    expect(generate.mock.calls[0][1].prompt).toContain('Job title: Senior Backend Developer')
+    expect(result.seniority).toBe('senior')
   })
 })
 

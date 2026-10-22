@@ -14,6 +14,7 @@ import { PLACEHOLDERS } from './anonymize'
 import { addUnique } from './cv'
 import { generateStructured, type GeminiConfig } from './gemini'
 import type { MatchResult } from './matchScore'
+import { resolveSeniority } from './seniority'
 
 type OnStatus = (message: string) => void
 
@@ -23,15 +24,21 @@ export interface PostingInfo {
   requirements: JobRequirements
 }
 
-export async function analyzePosting(config: GeminiConfig, text: string, onStatus?: OnStatus): Promise<JobRequirements> {
+export async function analyzePosting(
+  config: GeminiConfig,
+  posting: { title: string; text: string },
+  onStatus?: OnStatus,
+): Promise<JobRequirements> {
   const requirements = await generateStructured(config, {
     schema: JobRequirementsSchema,
     systemInstruction: parsePostingSystemInstruction,
-    prompt: parsePostingPrompt(text),
+    prompt: parsePostingPrompt(posting.title, posting.text),
     onStatus,
   })
   return {
     ...requirements,
+    // A level named in the title ("Senior Backend Developer") is checked in code and wins.
+    seniority: resolveSeniority(posting.title, requirements.seniority),
     mustHaveSkills: addUnique([], requirements.mustHaveSkills),
     niceToHaveSkills: addUnique([], requirements.niceToHaveSkills),
   }

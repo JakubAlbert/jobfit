@@ -1,4 +1,19 @@
-import type { ApplicationStatus } from '../db/schema'
+import type { ApplicationStatus, Seniority, WorkMode } from '../db/schema'
+
+export const SENIORITY_LABELS: Record<Seniority, string> = {
+  junior: 'Junior',
+  mid: 'Medior',
+  senior: 'Senior',
+  lead: 'Lead',
+  unknown: 'neuvedená',
+}
+
+export const WORK_MODE_LABELS: Record<WorkMode, string> = {
+  onsite: 'v kancelárii',
+  hybrid: 'hybridne',
+  remote: 'na diaľku',
+  unknown: 'neuvedené',
+}
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   saved: 'Uložené',

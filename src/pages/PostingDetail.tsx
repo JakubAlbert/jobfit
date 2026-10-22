@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
+import { RequirementsEditor } from '../components/RequirementsEditor'
+import { SENIORITY_LABELS, WORK_MODE_LABELS } from '../components/statusLabels'
 import { ScoreCard } from '../components/ScoreCard'
-import { TagListEditor } from '../components/TagListEditor'
 import {
   dangerButton,
   FeedbackMessage,
@@ -13,35 +14,13 @@ import {
   type Feedback,
 } from '../components/ui'
 import { db, PROFILE_ID } from '../db/db'
-import type {
-  Analysis,
-  CoverLetterLanguage,
-  JobPosting,
-  JobRequirements,
-  Profile,
-  Seniority,
-  WorkMode,
-} from '../db/schema'
+import type { Analysis, CoverLetterLanguage, JobPosting, JobRequirements, Profile } from '../db/schema'
 import { newApplication } from '../lib/applications'
 import { GeminiError } from '../lib/gemini'
 import { compareLanguages, computeMatch, type MatchResult } from '../lib/matchScore'
 import { analyzePosting, generateCoverLetter, generateInsights } from '../lib/posting'
 import { loadSettings } from '../lib/settings'
-
-const SENIORITY_LABELS: Record<Seniority, string> = {
-  junior: 'Junior',
-  mid: 'Medior',
-  senior: 'Senior',
-  lead: 'Lead',
-  unknown: 'neuvedená',
-}
-
-const WORK_MODE_LABELS: Record<WorkMode, string> = {
-  onsite: 'v kancelárii',
-  hybrid: 'hybridne',
-  remote: 'na diaľku',
-  unknown: 'neuvedené',
-}
+import { PostingForm, type PostingFields } from './PostingForm'
 
 interface PostingDetailProps {
   posting: JobPosting
@@ -62,6 +41,7 @@ export function PostingDetail(props: PostingDetailProps) {
   const [droppedRewrites, setDroppedRewrites] = useState(0)
   const [letterLanguage, setLetterLanguage] = useState<CoverLetterLanguage>('sk')
   const [applicationId, setApplicationId] = useState<string | null>(null)
+  const [editing, setEditing] = useState(false)
   const hasApiKey = Boolean(loadSettings().apiKey)
 
   useEffect(() => {
@@ -90,12 +70,15 @@ export function PostingDetail(props: PostingDetailProps) {
     onChanged()
   }
 
-  async function handleAnalyzePosting() {
+  async function handleAnalyzePosting(target: JobPosting = posting) {
     setBusy('posting')
     setFeedback({ tone: 'info', text: 'Analyzujem inzerát…' })
     try {
-      const requirements = await analyzePosting(loadSettings(), posting.text, onStatus)
-      await savePosting({ requirements })
+      const requirements = await analyzePosting(loadSettings(), { title: target.title, text: target.text }, onStatus)
+      const updated = { ...target, requirements }
+      setPosting(updated)
+      await db.postings.put(updated)
+      onChanged()
       setFeedback(null)
     } catch (error) {
       showError(error, 'Analýza inzerátu zlyhala.')
@@ -195,8 +178,32 @@ export function PostingDetail(props: PostingDetailProps) {
     }
   }
 
+  /** Saves edited posting details. A changed title or text means new requirements, so it is analysed again. */
+  async function handleEdit(fields: PostingFields) {
+    const contentChanged = fields.text !== posting.text || fields.title !== posting.title
+    const updated: JobPosting = { ...posting, ...fields, requirements: contentChanged ? null : posting.requirements }
+    setPosting(updated)
+    await db.postings.put(updated)
+    onChanged()
+    setEditing(false)
+    if (contentChanged && hasApiKey) await handleAnalyzePosting(updated)
+  }
+
   const requirements = posting.requirements
   const insightsOutdated = analysis?.insights && match && analysis.score !== match.score
+
+  if (editing) {
+    return (
+      <PostingForm
+        heading="Upraviť inzerát"
+        lead="Keď zmeníš pozíciu alebo text, inzerát sa po uložení znova analyzuje. Ručné úpravy požiadaviek sa tým nahradia."
+        submitLabel={hasApiKey ? 'Uložiť a analyzovať' : 'Uložiť'}
+        initial={{ title: posting.title, company: posting.company, url: posting.url, text: posting.text }}
+        onSubmit={handleEdit}
+        onCancel={() => setEditing(false)}
+      />
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -225,7 +232,9 @@ export function PostingDetail(props: PostingDetailProps) {
             Vytvoriť žiadosť
           </button>
         )}
-        <span className={hintClass}>Sleduj stav žiadosti o túto pozíciu v trackeri.</span>
+        <button type="button" onClick={() => setEditing(true)} disabled={busy !== null} className={secondaryButton}>
+          Upraviť inzerát
+        </button>
       </div>
 
       <FeedbackMessage feedback={feedback} />
@@ -235,7 +244,7 @@ export function PostingDetail(props: PostingDetailProps) {
           <p className={`${hintClass} mb-3`}>Inzerát ešte nie je analyzovaný.</p>
           <button
             type="button"
-            onClick={handleAnalyzePosting}
+            onClick={() => handleAnalyzePosting()}
             disabled={busy !== null || !hasApiKey}
             className={primaryButton}
           >
@@ -259,7 +268,21 @@ export function PostingDetail(props: PostingDetailProps) {
             )}
           </Section>
 
-          <Section title="Požiadavky">
+          <Section
+            title="Požiadavky"
+            aside={
+              hasApiKey && (
+                <button
+                  type="button"
+                  onClick={() => handleAnalyzePosting()}
+                  disabled={busy !== null}
+                  className={`${linkClass} text-sm`}
+                >
+                  {busy === 'posting' ? 'Analyzujem…' : 'Analyzovať znova'}
+                </button>
+              )
+            }
+          >
             <dl className="mb-6 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
               <Info label="Seniorita" value={SENIORITY_LABELS[requirements.seniority]} />
               <Info label="Spôsob práce" value={WORK_MODE_LABELS[requirements.workMode]} />
@@ -284,26 +307,11 @@ export function PostingDetail(props: PostingDetailProps) {
             )}
 
             <details>
-              <summary className="cursor-pointer text-sm font-medium">Upraviť zručnosti z inzerátu</summary>
+              <summary className="cursor-pointer text-sm font-semibold text-accent">Upraviť požiadavky</summary>
               <p className={`${hintClass} my-3`}>
-                AI sa môže pomýliť. Úpravy sa hneď prejavia v skóre.
+                Doplň alebo oprav, čo AI nenašla alebo prečítala zle. Zmeny zručností sa hneď prejavia v skóre.
               </p>
-              <div className="space-y-6">
-                <TagListEditor
-                  label="Povinné zručnosti"
-                  placeholder="napr. React"
-                  items={requirements.mustHaveSkills}
-                  onChange={(mustHaveSkills) => savePosting({ requirements: { ...requirements, mustHaveSkills } })}
-                />
-                <TagListEditor
-                  label="Výhodou"
-                  placeholder="napr. Docker"
-                  items={requirements.niceToHaveSkills}
-                  onChange={(niceToHaveSkills) =>
-                    savePosting({ requirements: { ...requirements, niceToHaveSkills } })
-                  }
-                />
-              </div>
+              <RequirementsEditor value={requirements} onChange={(next) => savePosting({ requirements: next })} />
             </details>
           </Section>
 

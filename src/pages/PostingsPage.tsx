@@ -1,21 +1,13 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { scoreChip } from '../components/scoreColor'
-import {
-  EmptyState,
-  FeedbackMessage,
-  PageHeader,
-  hintClass,
-  inputClass,
-  labelClass,
-  primaryButton,
-  secondaryButton,
-  type Feedback,
-} from '../components/ui'
+import { EmptyState, hintClass, PageHeader, primaryButton } from '../components/ui'
 import { db, PROFILE_ID } from '../db/db'
 import type { JobPosting, Profile } from '../db/schema'
 import { computeMatch } from '../lib/matchScore'
 import { notifyOnboardingProgress } from '../lib/onboarding'
+import { fillSeniorityFromTitle } from '../lib/seniority'
 import { PostingDetail } from './PostingDetail'
+import { PostingForm, type PostingFields } from './PostingForm'
 
 type View = { name: 'list' } | { name: 'new' } | { name: 'detail'; id: string }
 
@@ -24,7 +16,11 @@ async function loadData() {
     db.postings.orderBy('createdAt').reverse().toArray(),
     db.profiles.get(PROFILE_ID),
   ])
-  return { postings, profile: profile ?? null }
+  // One-off repair of postings analysed before the title was used for seniority.
+  const repaired = postings.map(fillSeniorityFromTitle).filter((posting) => posting !== null)
+  if (repaired.length > 0) await db.postings.bulkPut(repaired)
+  const fixed = postings.map((posting) => repaired.find((r) => r.id === posting.id) ?? posting)
+  return { postings: fixed, profile: profile ?? null }
 }
 
 interface PostingsPageProps {
@@ -112,7 +108,7 @@ export function PostingsPage(props: PostingsPageProps) {
                 <button
                   type="button"
                   onClick={() => setView({ name: 'detail', id: posting.id })}
-                  className="flex h-full w-full items-center gap-4 rounded-3xl bg-surface p-4 text-left ring-1 ring-line transition hover:ring-accent/40"
+                  className="flex h-full w-full items-center gap-4 rounded-2xl bg-surface p-4 text-left ring-1 ring-line transition hover:ring-accent/40"
                 >
                   {/* The score tile carries the score colour, so the list can be scanned by fit. */}
                   <span
@@ -148,80 +144,20 @@ export function PostingsPage(props: PostingsPageProps) {
 }
 
 function NewPostingForm({ onCancel, onSaved }: { onCancel: () => void; onSaved: (id: string) => void }) {
-  const [title, setTitle] = useState('')
-  const [company, setCompany] = useState('')
-  const [url, setUrl] = useState('')
-  const [text, setText] = useState('')
-  const [feedback, setFeedback] = useState<Feedback>(null)
-
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault()
-    const posting: JobPosting = {
-      id: crypto.randomUUID(),
-      title: title.trim(),
-      company: company.trim(),
-      url: url.trim(),
-      text: text.trim(),
-      requirements: null,
-      createdAt: new Date().toISOString(),
-    }
-    try {
-      await db.postings.add(posting)
-      notifyOnboardingProgress()
-      onSaved(posting.id)
-    } catch {
-      setFeedback({ tone: 'error', text: 'Inzerát sa nepodarilo uložiť.' })
-    }
+  async function handleSubmit(fields: PostingFields) {
+    const posting: JobPosting = { id: crypto.randomUUID(), ...fields, requirements: null, createdAt: new Date().toISOString() }
+    await db.postings.add(posting)
+    notifyOnboardingProgress()
+    onSaved(posting.id)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <PageHeader title="Nový inzerát" lead="Vlož celý text inzerátu. Pozícia, firma a odkaz pomôžu inzerát neskôr nájsť." />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field id="posting-title" label="Pozícia" value={title} onChange={setTitle} />
-        <Field id="posting-company" label="Firma" value={company} onChange={setCompany} />
-      </div>
-      <Field id="posting-url" label="URL inzerátu (voliteľné)" value={url} onChange={setUrl} type="url" />
-      <div>
-        <label htmlFor="posting-text" className={labelClass}>
-          Text inzerátu
-        </label>
-        <textarea
-          id="posting-text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={14}
-          required
-          placeholder="Sem vlož celý text inzerátu…"
-          className={`${inputClass} mt-1`}
-        />
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <button type="submit" disabled={!text.trim()} className={primaryButton}>
-          Uložiť inzerát
-        </button>
-        <button type="button" onClick={onCancel} className={secondaryButton}>
-          Zrušiť
-        </button>
-      </div>
-      <FeedbackMessage feedback={feedback} />
-    </form>
-  )
-}
-
-function Field(props: { id: string; label: string; value: string; onChange: (value: string) => void; type?: string }) {
-  return (
-    <div>
-      <label htmlFor={props.id} className={labelClass}>
-        {props.label}
-      </label>
-      <input
-        id={props.id}
-        type={props.type ?? 'text'}
-        value={props.value}
-        onChange={(e) => props.onChange(e.target.value)}
-        className={`${inputClass} mt-1`}
-      />
-    </div>
+    <PostingForm
+      heading="Nový inzerát"
+      lead="Vlož celý text inzerátu. Pozícia, firma a odkaz pomôžu inzerát neskôr nájsť."
+      submitLabel="Uložiť inzerát"
+      onSubmit={handleSubmit}
+      onCancel={onCancel}
+    />
   )
 }
