@@ -5,11 +5,11 @@ import { db, PROFILE_ID } from '../db/db'
 import type { JobPosting, Profile } from '../db/schema'
 import { computeMatch } from '../lib/matchScore'
 import { notifyOnboardingProgress } from '../lib/onboarding'
+import { NEW_ID } from '../lib/router'
 import { fillSeniorityFromTitle } from '../lib/seniority'
 import { PostingDetail } from './PostingDetail'
 import { PostingForm, type PostingFields } from './PostingForm'
 
-type View = { name: 'list' } | { name: 'new' } | { name: 'detail'; id: string }
 
 async function loadData() {
   const [postings, profile] = await Promise.all([
@@ -24,15 +24,16 @@ async function loadData() {
 }
 
 interface PostingsPageProps {
-  /** Open this posting right away (e.g. coming from an application). */
-  initialId?: string
+  /** From the address: a posting id, NEW_ID for the form, or nothing for the list. */
+  id?: string
+  onNavigate: (id?: string, options?: { replace?: boolean }) => void
   onOpenProfile: () => void
   onOpenSettings: () => void
   onOpenApplication: (id: string) => void
 }
 
 export function PostingsPage(props: PostingsPageProps) {
-  const [view, setView] = useState<View>(props.initialId ? { name: 'detail', id: props.initialId } : { name: 'list' })
+  const { id, onNavigate } = props
   const [postings, setPostings] = useState<JobPosting[] | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
 
@@ -51,27 +52,25 @@ export function PostingsPage(props: PostingsPageProps) {
 
   if (!postings) return <p className={hintClass}>Načítavam inzeráty…</p>
 
-  if (view.name === 'new') {
+  if (id === NEW_ID) {
     return (
       <NewPostingForm
-        onCancel={() => setView({ name: 'list' })}
-        onSaved={async (id) => {
-          await reload()
-          setView({ name: 'detail', id })
-        }}
+        onCancel={() => onNavigate(undefined, { replace: true })}
+        // Replace the form in history, so Back from the new posting does not reopen an empty form.
+        onSaved={(newId) => onNavigate(newId, { replace: true })}
       />
     )
   }
 
-  if (view.name === 'detail') {
-    const posting = postings.find((item) => item.id === view.id)
+  if (id) {
+    const posting = postings.find((item) => item.id === id)
     if (posting) {
       return (
         <PostingDetail
           key={posting.id}
           posting={posting}
           profile={profile}
-          onBack={() => setView({ name: 'list' })}
+          onBack={() => onNavigate()}
           onChanged={reload}
           onOpenProfile={props.onOpenProfile}
           onOpenSettings={props.onOpenSettings}
@@ -87,7 +86,7 @@ export function PostingsPage(props: PostingsPageProps) {
         title="Inzeráty"
         lead="Vložené inzeráty a to, ako k nim sedí tvoje CV."
         actions={
-          <button type="button" onClick={() => setView({ name: 'new' })} className={primaryButton}>
+          <button type="button" onClick={() => onNavigate(NEW_ID)} className={primaryButton}>
             Pridať inzerát
           </button>
         }
@@ -107,7 +106,7 @@ export function PostingsPage(props: PostingsPageProps) {
               <li key={posting.id}>
                 <button
                   type="button"
-                  onClick={() => setView({ name: 'detail', id: posting.id })}
+                  onClick={() => onNavigate(posting.id)}
                   className="flex h-full w-full items-center gap-4 rounded-2xl bg-surface p-4 text-left ring-1 ring-line transition hover:ring-accent/40"
                 >
                   {/* The score tile carries the score colour, so the list can be scanned by fit. */}

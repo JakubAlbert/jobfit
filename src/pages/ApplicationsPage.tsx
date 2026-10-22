@@ -6,6 +6,7 @@ import { db, PROFILE_ID } from '../db/db'
 import type { Application, ApplicationStatus, JobPosting, Profile } from '../db/schema'
 import { changeStatus, newApplication, todayIso } from '../lib/applications'
 import { computeMatch } from '../lib/matchScore'
+import { NEW_ID } from '../lib/router'
 import { ApplicationEditor } from './ApplicationEditor'
 
 type Layout = 'kanban' | 'table'
@@ -38,28 +39,26 @@ async function loadData() {
 }
 
 interface ApplicationsPageProps {
-  /** Open this application right away (e.g. coming from a posting or the overview). */
-  initialId?: string
+  /** From the address: an application id, NEW_ID for an empty form, or nothing for the board. */
+  id?: string
+  onNavigate: (id?: string, options?: { replace?: boolean }) => void
   onOpenPosting: (id: string) => void
 }
 
-export function ApplicationsPage({ initialId, onOpenPosting }: ApplicationsPageProps) {
+export function ApplicationsPage({ id, onNavigate, onOpenPosting }: ApplicationsPageProps) {
   const [data, setData] = useState<{ applications: Application[]; postings: JobPosting[]; profile: Profile | null } | null>(
     null,
   )
   const [layout, setLayout] = useState<Layout>(loadLayout)
-  const [editing, setEditing] = useState<{ application: Application; isNew: boolean } | null>(null)
+  // Created once per visit of the "new" address; the page remounts on every navigation.
+  const [draft] = useState(() => newApplication({ company: '', position: '' }))
   const today = todayIso()
 
   const reload = useCallback(() => loadData().then(setData), [])
 
   useEffect(() => {
-    loadData().then((loaded) => {
-      setData(loaded)
-      const initial = initialId && loaded.applications.find((app) => app.id === initialId)
-      if (initial) setEditing({ application: initial, isNew: false })
-    })
-  }, [initialId])
+    reload()
+  }, [reload])
 
   // Live score per application, from its linked posting and the current profile.
   const scores = useMemo(() => {
@@ -83,8 +82,16 @@ export function ApplicationsPage({ initialId, onOpenPosting }: ApplicationsPageP
     await save(changeStatus(application, status, today))
   }
 
+  const editing =
+    id === NEW_ID
+      ? { application: draft, isNew: true }
+      : id
+        ? data.applications.filter((app) => app.id === id).map((application) => ({ application, isNew: false }))[0]
+        : undefined
+
   if (editing) {
-    const close = () => setEditing(null)
+    // Replace the editor in history when leaving it, so Back goes to where the user came from.
+    const close = () => onNavigate(undefined, { replace: true })
     return (
       <ApplicationEditor
         key={editing.application.id}
@@ -133,7 +140,7 @@ export function ApplicationsPage({ initialId, onOpenPosting }: ApplicationsPageP
           </div>
           <button
             type="button"
-            onClick={() => setEditing({ application: newApplication({ company: '', position: '' }), isNew: true })}
+            onClick={() => onNavigate(NEW_ID)}
             className={primaryButton}
           >
             Pridať žiadosť
@@ -153,13 +160,13 @@ export function ApplicationsPage({ initialId, onOpenPosting }: ApplicationsPageP
           scores={scores}
           today={today}
           onMove={handleMove}
-          onOpen={(application) => setEditing({ application, isNew: false })}
+          onOpen={(application) => onNavigate(application.id)}
         />
       ) : (
         <ApplicationTable
           applications={data.applications}
           scores={scores}
-          onOpen={(application) => setEditing({ application, isNew: false })}
+          onOpen={(application) => onNavigate(application.id)}
         />
       )}
     </div>

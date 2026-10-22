@@ -4,15 +4,13 @@ import { BoardIcon, HomeIcon, LogoMark, PostingIcon, ProfileIcon, SettingsIcon }
 import { NextStepBanner } from './components/NextStepBanner'
 import { ThemeSwitch } from './components/ThemeSwitch'
 import { db } from './db/db'
+import { navigate, parseHash, type PageId, type Route } from './lib/router'
 import { followSystemTheme } from './lib/theme'
 import { ApplicationsPage } from './pages/ApplicationsPage'
 import { HomePage } from './pages/HomePage'
 import { PostingsPage } from './pages/PostingsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SettingsPage } from './pages/SettingsPage'
-
-// Plain state-based navigation: a few screens do not justify a router dependency yet.
-type PageId = 'home' | 'applications' | 'postings' | 'profile' | 'settings'
 
 /** The main sections. Settings is reached from the gear icon, so it does not compete with them. */
 const MAIN_PAGES: { id: PageId; label: string; icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
@@ -24,18 +22,19 @@ const MAIN_PAGES: { id: PageId; label: string; icon: ComponentType<SVGProps<SVGS
 
 const YEAR = new Date().getFullYear()
 
-/** A page, optionally with the id of an item to open on it. */
-interface Route {
-  page: PageId
-  id?: string
-}
-
 function App() {
-  const [route, setRoute] = useState<Route>({ page: 'home' })
-  const go = (page: PageId, id?: string) => {
-    setRoute({ page, id })
-    window.scrollTo({ top: 0 })
-  }
+  // The address bar is the source of truth: links, Back/Forward and bookmarks all go through it.
+  const [route, setRoute] = useState<Route>(() => parseHash(window.location.hash))
+  const go = (page: PageId, id?: string, options?: { replace?: boolean }) => navigate({ page, id }, options)
+
+  useEffect(() => {
+    const onHashChange = () => {
+      setRoute(parseHash(window.location.hash))
+      window.scrollTo({ top: 0 })
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
 
   const [storageBlocked, setStorageBlocked] = useState(false)
 
@@ -106,11 +105,16 @@ function App() {
         <ErrorBoundary>
           {route.page === 'home' && <HomePage onNavigate={go} />}
           {route.page === 'applications' && (
-            <ApplicationsPage initialId={route.id} onOpenPosting={(id) => go('postings', id)} />
+            <ApplicationsPage
+              id={route.id}
+              onNavigate={(id, options) => go('applications', id, options)}
+              onOpenPosting={(id) => go('postings', id)}
+            />
           )}
           {route.page === 'postings' && (
             <PostingsPage
-              initialId={route.id}
+              id={route.id}
+              onNavigate={(id, options) => go('postings', id, options)}
               onOpenProfile={() => go('profile')}
               onOpenSettings={() => go('settings')}
               onOpenApplication={(id) => go('applications', id)}
