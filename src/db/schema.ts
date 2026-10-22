@@ -87,6 +87,17 @@ export const AiInsightsSchema = z.object({
   rewrites: z.array(z.object({ original: z.string(), suggestion: z.string() })),
 })
 
+export const InterviewPrepSchema = z.object({
+  questions: z.array(
+    z.object({
+      question: z.string(),
+      why: z.string(),
+      answerPoints: z.array(z.string()),
+    }),
+  ),
+  questionsToAsk: z.array(z.string()),
+})
+
 export const COVER_LETTER_LANGUAGES = ['sk', 'en'] as const
 
 export const CoverLetterSchema = z.object({
@@ -109,6 +120,8 @@ export const AnalysisSchema = z.object({
   insights: AiInsightsSchema.nullable(),
   /** Optional cover letter; the default keeps older backups importable. */
   coverLetter: CoverLetterSchema.nullable().default(null),
+  /** Optional interview preparation; the default keeps older backups importable. */
+  interviewPrep: InterviewPrepSchema.nullable().default(null),
   createdAt: timestamp,
 })
 
@@ -171,6 +184,7 @@ export type JobPosting = z.infer<typeof JobPostingSchema>
 export type AiInsights = z.infer<typeof AiInsightsSchema>
 export type CoverLetterLanguage = (typeof COVER_LETTER_LANGUAGES)[number]
 export type CoverLetter = z.infer<typeof CoverLetterSchema>
+export type InterviewPrep = z.infer<typeof InterviewPrepSchema>
 export type Analysis = z.infer<typeof AnalysisSchema>
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number]
 export type StatusChange = z.infer<typeof StatusChangeSchema>

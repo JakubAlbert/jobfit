@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import {
   AiInsightsSchema,
+  InterviewPrepSchema,
+  type InterviewPrep,
   JobRequirementsSchema,
   type AiInsights,
   type CoverLetterLanguage,
@@ -8,6 +10,7 @@ import {
   type JobRequirements,
 } from '../db/schema'
 import { coverLetterPrompt, coverLetterSystemInstruction } from '../prompts/coverLetter'
+import { interviewPrepPrompt, interviewPrepSystemInstruction } from '../prompts/interviewPrep'
 import { matchInsightsPrompt, matchInsightsSystemInstruction } from '../prompts/matchInsights'
 import { parsePostingPrompt, parsePostingSystemInstruction } from '../prompts/parsePosting'
 import { PLACEHOLDERS } from './anonymize'
@@ -70,6 +73,19 @@ export function filterRewrites(insights: AiInsights, cv: CvData): { insights: Ai
     return original.length > 0 && cvText.includes(original)
   })
   return { insights: { ...insights, rewrites }, droppedRewrites: insights.rewrites.length - rewrites.length }
+}
+
+export async function generateInterviewPrep(
+  config: GeminiConfig,
+  input: { cv: CvData; posting: PostingInfo; match: MatchResult },
+  onStatus?: OnStatus,
+): Promise<InterviewPrep> {
+  return generateStructured(config, {
+    schema: InterviewPrepSchema,
+    systemInstruction: interviewPrepSystemInstruction,
+    prompt: interviewPrepPrompt({ cv: input.cv, job: input.posting, match: input.match }),
+    onStatus,
+  })
 }
 
 const CoverLetterResponseSchema = z.object({ letter: z.string().min(1) })

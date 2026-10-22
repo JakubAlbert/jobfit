@@ -3,7 +3,7 @@ import type { AiInsights, CvData, JobRequirements } from '../db/schema'
 import { EMPTY_CV } from './cv'
 import { generateStructured } from './gemini'
 import { computeMatch } from './matchScore'
-import { analyzePosting, filterRewrites, generateCoverLetter, generateInsights } from './posting'
+import { analyzePosting, filterRewrites, generateCoverLetter, generateInsights, generateInterviewPrep } from './posting'
 
 vi.mock('./gemini', () => ({ generateStructured: vi.fn() }))
 const generate = vi.mocked(generateStructured)
@@ -101,6 +101,21 @@ describe('generateInsights', () => {
     expect(sent.match.score).toBe(match.score)
     expect(sent.cv.experience[0].company).toBe('Acme')
     expect(result.droppedRewrites).toBe(1)
+  })
+})
+
+describe('generateInterviewPrep', () => {
+  it('sends the structured CV, the posting and the computed match', async () => {
+    const prep = { questions: [{ question: 'Q', why: 'W', answerPoints: ['P'] }], questionsToAsk: ['A'] }
+    generate.mockResolvedValueOnce(prep)
+    const match = computeMatch(cv.skills, requirements)
+
+    await expect(generateInterviewPrep(config, { cv, posting, match })).resolves.toEqual(prep)
+
+    const sent = JSON.parse(generate.mock.calls[0][1].prompt)
+    expect(sent.job.title).toBe('Frontend Developer')
+    expect(sent.match.missingNiceToHave).toEqual(['AWS'])
+    expect(generate.mock.calls[0][1].systemInstruction).toContain('Never invent')
   })
 })
 

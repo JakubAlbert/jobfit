@@ -188,6 +188,36 @@ export function buildDemoBackup(today: string, now: Date = new Date()): Backup {
             ],
           },
           coverLetter: null,
+          interviewPrep: {
+            questions: [
+              {
+                question: 'Ako ste v Reacte riešili výkon pri väčších zoznamoch alebo formulároch?',
+                why: 'React je povinná technológia a výkon je bežná téma technického kola.',
+                answerPoints: [
+                  'Rezervačný systém v Reacte a TypeScripte',
+                  'Skrátenie načítania hlavnej stránky o 35 %',
+                ],
+              },
+              {
+                question: 'Ako testujete frontend?',
+                why: 'Jest je v inzeráte uvedený ako výhoda.',
+                answerPoints: ['Zavedenie unit testov v Jeste v súčasnej práci'],
+              },
+              {
+                question: 'Máte skúsenosti s Next.js?',
+                why: 'Next.js je v inzeráte výhodou a v CV chýba.',
+                answerPoints: [
+                  'Úprimne povedať, že produkčne nie',
+                  'Ukázať, že ho skúšate na vlastnom projekte a nadväzuje na React',
+                ],
+              },
+            ],
+            questionsToAsk: [
+              'Ako vyzerá proces nasadzovania a code review v tíme?',
+              'Aké sú najväčšie technické výzvy aplikácie na najbližší rok?',
+              'Ako sa v tíme meria úspech v prvých troch mesiacoch?',
+            ],
+          },
           createdAt: timestamp,
         },
       ],

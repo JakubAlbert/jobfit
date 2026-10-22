@@ -18,7 +18,7 @@ import type { Analysis, CoverLetterLanguage, JobPosting, JobRequirements, Profil
 import { newApplication } from '../lib/applications'
 import { GeminiError } from '../lib/gemini'
 import { compareLanguages, computeMatch, type MatchResult } from '../lib/matchScore'
-import { analyzePosting, generateCoverLetter, generateInsights } from '../lib/posting'
+import { analyzePosting, generateCoverLetter, generateInsights, generateInterviewPrep } from '../lib/posting'
 import { loadSettings } from '../lib/settings'
 import { PostingForm, type PostingFields } from './PostingForm'
 
@@ -36,7 +36,7 @@ export function PostingDetail(props: PostingDetailProps) {
   const { profile, onBack, onChanged, onOpenProfile, onOpenSettings, onOpenApplication } = props
   const [posting, setPosting] = useState(props.posting)
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
-  const [busy, setBusy] = useState<'posting' | 'insights' | 'letter' | null>(null)
+  const [busy, setBusy] = useState<'posting' | 'insights' | 'prep' | 'letter' | null>(null)
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [droppedRewrites, setDroppedRewrites] = useState(0)
   const [letterLanguage, setLetterLanguage] = useState<CoverLetterLanguage>('sk')
@@ -94,6 +94,7 @@ export function PostingDetail(props: PostingDetailProps) {
       profileId: PROFILE_ID,
       insights: null,
       coverLetter: null,
+      interviewPrep: null,
       ...analysis,
       // Snapshot of what the AI was given.
       score: match.score,
@@ -122,6 +123,25 @@ export function PostingDetail(props: PostingDetailProps) {
       setFeedback(null)
     } catch (error) {
       showError(error, 'Odporúčania sa nepodarilo pripraviť.')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function handleInterviewPrep() {
+    if (!profile || !posting.requirements || !match) return
+    setBusy('prep')
+    setFeedback({ tone: 'info', text: 'Pripravujem otázky na pohovor…' })
+    try {
+      const interviewPrep = await generateInterviewPrep(
+        loadSettings(),
+        { cv: profile.cv, posting: postingInfo(posting, posting.requirements), match },
+        onStatus,
+      )
+      await saveAnalysis(match, { interviewPrep })
+      setFeedback(null)
+    } catch (error) {
+      showError(error, 'Prípravu na pohovor sa nepodarilo vytvoriť.')
     } finally {
       setBusy(null)
     }
@@ -370,6 +390,41 @@ export function PostingDetail(props: PostingDetailProps) {
               className={`${analysis?.insights ? secondaryButton : primaryButton} mt-4`}
             >
               {busy === 'insights' ? 'Pripravujem…' : analysis?.insights ? 'Vygenerovať znova' : 'Získať odporúčania'}
+            </button>
+            {!hasApiKey && <MissingKey onOpenSettings={onOpenSettings} />}
+          </Section>
+
+          <Section title="Príprava na pohovor">
+            {analysis?.interviewPrep ? (
+              <div className="space-y-6">
+                <ol className="space-y-3">
+                  {analysis.interviewPrep.questions.map((item) => (
+                    <li key={item.question} className="rounded-xl bg-sunken p-4">
+                      <p className="font-semibold">{item.question}</p>
+                      <p className="mt-1 text-sm text-muted">{item.why}</p>
+                      <ul className="mt-2 list-disc space-y-0.5 pl-5 text-sm">
+                        {item.answerPoints.map((point) => (
+                          <li key={point}>{point}</li>
+                        ))}
+                      </ul>
+                    </li>
+                  ))}
+                </ol>
+                <List title="Na čo sa môžeš opýtať ty" items={analysis.interviewPrep.questionsToAsk} />
+              </div>
+            ) : (
+              <p className={`${hintClass} mb-3`}>
+                Pravdepodobné otázky podľa inzerátu a tvojich medzier, s bodmi z tvojho CV, o ktoré sa môžeš
+                oprieť.
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={handleInterviewPrep}
+              disabled={busy !== null || !match || !hasApiKey}
+              className={`${analysis?.interviewPrep ? secondaryButton : primaryButton} mt-4`}
+            >
+              {busy === 'prep' ? 'Pripravujem…' : analysis?.interviewPrep ? 'Vygenerovať znova' : 'Pripraviť otázky'}
             </button>
             {!hasApiKey && <MissingKey onOpenSettings={onOpenSettings} />}
           </Section>
