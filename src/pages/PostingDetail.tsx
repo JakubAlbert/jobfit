@@ -21,6 +21,7 @@ import type {
   Seniority,
   WorkMode,
 } from '../db/schema'
+import { newApplication } from '../lib/applications'
 import { GeminiError } from '../lib/gemini'
 import { compareLanguages, computeMatch, type MatchResult } from '../lib/matchScore'
 import { analyzePosting, generateCoverLetter, generateInsights } from '../lib/posting'
@@ -48,20 +49,27 @@ interface PostingDetailProps {
   onChanged: () => void
   onOpenProfile: () => void
   onOpenSettings: () => void
+  onOpenApplication: (id: string) => void
 }
 
 export function PostingDetail(props: PostingDetailProps) {
-  const { profile, onBack, onChanged, onOpenProfile, onOpenSettings } = props
+  const { profile, onBack, onChanged, onOpenProfile, onOpenSettings, onOpenApplication } = props
   const [posting, setPosting] = useState(props.posting)
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [busy, setBusy] = useState<'posting' | 'insights' | 'letter' | null>(null)
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [droppedRewrites, setDroppedRewrites] = useState(0)
   const [letterLanguage, setLetterLanguage] = useState<CoverLetterLanguage>('sk')
+  const [applicationId, setApplicationId] = useState<string | null>(null)
   const hasApiKey = Boolean(loadSettings().apiKey)
 
   useEffect(() => {
     db.analyses.get(posting.id).then((stored) => setAnalysis(stored ?? null))
+    db.applications
+      .where('postingId')
+      .equals(posting.id)
+      .first()
+      .then((application) => setApplicationId(application?.id ?? null))
   }, [posting.id])
 
   // Always computed from the current profile and requirements: free, instant and never stale.
@@ -159,11 +167,19 @@ export function PostingDetail(props: PostingDetailProps) {
     }
   }
 
+  async function handleCreateApplication() {
+    const application = newApplication({ company: posting.company, position: posting.title, postingId: posting.id })
+    await db.applications.add(application)
+    onOpenApplication(application.id)
+  }
+
   async function handleDelete() {
-    if (!window.confirm('Naozaj vymazať tento inzerát aj jeho analýzu?')) return
-    await db.transaction('rw', db.postings, db.analyses, async () => {
+    if (!window.confirm('Naozaj vymazať tento inzerát aj jeho analýzu? Žiadosti zostanú, len bez prepojenia.')) return
+    await db.transaction('rw', db.postings, db.analyses, db.applications, async () => {
       await db.postings.delete(posting.id)
       await db.analyses.delete(posting.id)
+      // Applications are kept; they just lose the link to the deleted posting.
+      await db.applications.where('postingId').equals(posting.id).modify({ postingId: null })
     })
     onChanged()
     onBack()
@@ -199,6 +215,19 @@ export function PostingDetail(props: PostingDetailProps) {
             </>
           )}
         </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {applicationId ? (
+          <button type="button" onClick={() => onOpenApplication(applicationId)} className={secondaryButton}>
+            Otvoriť žiadosť
+          </button>
+        ) : (
+          <button type="button" onClick={handleCreateApplication} className={secondaryButton}>
+            Vytvoriť žiadosť
+          </button>
+        )}
+        <span className={hintClass}>Sleduj stav žiadosti o túto pozíciu v trackeri.</span>
       </div>
 
       <FeedbackMessage feedback={feedback} />

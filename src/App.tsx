@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { ApplicationsPage } from './pages/ApplicationsPage'
+import { HomePage } from './pages/HomePage'
 import { PostingsPage } from './pages/PostingsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SettingsPage } from './pages/SettingsPage'
@@ -6,6 +8,7 @@ import { SettingsPage } from './pages/SettingsPage'
 // Plain state-based navigation: a few screens do not justify a router dependency yet.
 const PAGES = [
   { id: 'home', label: 'Prehľad' },
+  { id: 'applications', label: 'Žiadosti' },
   { id: 'postings', label: 'Inzeráty' },
   { id: 'profile', label: 'Profil' },
   { id: 'settings', label: 'Nastavenia' },
@@ -13,21 +16,28 @@ const PAGES = [
 
 type PageId = (typeof PAGES)[number]['id']
 
+/** A page, optionally with the id of an item to open on it. */
+interface Route {
+  page: PageId
+  id?: string
+}
+
 function App() {
-  const [page, setPage] = useState<PageId>('home')
+  const [route, setRoute] = useState<Route>({ page: 'home' })
+  const go = (page: PageId, id?: string) => setRoute({ page, id })
 
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <header className="border-b border-slate-200 dark:border-slate-800">
-        <nav className="mx-auto flex max-w-3xl items-center gap-1 px-4 py-3">
-          <span className="mr-4 text-lg font-bold">JobFit</span>
+        <nav className="mx-auto flex max-w-5xl items-center gap-1 overflow-x-auto px-4 py-3">
+          <span className="mr-3 shrink-0 text-lg font-bold">JobFit</span>
           {PAGES.map(({ id, label }) => (
             <button
               key={id}
               type="button"
-              onClick={() => setPage(id)}
-              aria-current={page === id ? 'page' : undefined}
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 aria-[current=page]:bg-slate-100 aria-[current=page]:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:aria-[current=page]:bg-slate-800 dark:aria-[current=page]:text-slate-100"
+              onClick={() => go(id)}
+              aria-current={route.page === id ? 'page' : undefined}
+              className="shrink-0 rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 aria-[current=page]:bg-slate-100 aria-[current=page]:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:aria-[current=page]:bg-slate-800 dark:aria-[current=page]:text-slate-100"
             >
               {label}
             </button>
@@ -35,21 +45,22 @@ function App() {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-6">
-        {page === 'home' && (
-          <div>
-            <h1 className="text-2xl font-bold">Prehľad</h1>
-            <p className="mt-2 text-slate-600 dark:text-slate-400">
-              Asistent na hľadanie práce. Čoskoro tu pribudne porovnanie CV s inzerátom a tracker
-              žiadostí. Začni zadaním API kľúča v Nastaveniach.
-            </p>
-          </div>
+      {/* The key remounts a page on every navigation, so it starts fresh and opens the requested item. */}
+      <main key={`${route.page}:${route.id ?? ''}`} className="mx-auto max-w-5xl px-4 py-6">
+        {route.page === 'home' && <HomePage onNavigate={go} />}
+        {route.page === 'applications' && (
+          <ApplicationsPage initialId={route.id} onOpenPosting={(id) => go('postings', id)} />
         )}
-        {page === 'postings' && (
-          <PostingsPage onOpenProfile={() => setPage('profile')} onOpenSettings={() => setPage('settings')} />
+        {route.page === 'postings' && (
+          <PostingsPage
+            initialId={route.id}
+            onOpenProfile={() => go('profile')}
+            onOpenSettings={() => go('settings')}
+            onOpenApplication={(id) => go('applications', id)}
+          />
         )}
-        {page === 'profile' && <ProfilePage onOpenSettings={() => setPage('settings')} />}
-        {page === 'settings' && <SettingsPage />}
+        {route.page === 'profile' && <ProfilePage onOpenSettings={() => go('settings')} />}
+        {route.page === 'settings' && <SettingsPage />}
       </main>
     </div>
   )

@@ -24,8 +24,16 @@ async function loadData() {
   return { postings, profile: profile ?? null }
 }
 
-export function PostingsPage(props: { onOpenProfile: () => void; onOpenSettings: () => void }) {
-  const [view, setView] = useState<View>({ name: 'list' })
+interface PostingsPageProps {
+  /** Open this posting right away (e.g. coming from an application). */
+  initialId?: string
+  onOpenProfile: () => void
+  onOpenSettings: () => void
+  onOpenApplication: (id: string) => void
+}
+
+export function PostingsPage(props: PostingsPageProps) {
+  const [view, setView] = useState<View>(props.initialId ? { name: 'detail', id: props.initialId } : { name: 'list' })
   const [postings, setPostings] = useState<JobPosting[] | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
 
@@ -68,6 +76,7 @@ export function PostingsPage(props: { onOpenProfile: () => void; onOpenSettings:
           onChanged={reload}
           onOpenProfile={props.onOpenProfile}
           onOpenSettings={props.onOpenSettings}
+          onOpenApplication={props.onOpenApplication}
         />
       )
     }
