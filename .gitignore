@@ -30,3 +30,6 @@ coverage
 # Note: the Gemini API key is NOT read from env at all; users enter it in the app (stored in localStorage).
 .env
 .env.*
+
+# Local Claude Code tooling
+.claude/
