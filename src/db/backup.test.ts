@@ -9,6 +9,8 @@ const NOW = '2026-10-22T10:00:00.000Z'
 const profile: Profile = {
   id: 'profile-1',
   rawText: 'CV text',
+  fullName: 'Ján Kováč',
+  address: 'Hlavná 12, 811 01 Bratislava',
   cv: {
     skills: ['TypeScript', 'React'],
     experience: [{ position: 'Developer', company: 'Acme', period: '2022–2026', description: 'Web apps' }],
@@ -64,6 +66,16 @@ describe('exportData / importData', () => {
     await importData(JSON.stringify(backup), db)
 
     expect(await db.applications.toArray()).toEqual([application])
+  })
+
+  it('imports a backup made before profiles had fullName and address', async () => {
+    const backup = await exportData(db)
+    const { fullName: _name, address: _address, ...oldProfile } = profile
+    const oldBackup = { ...backup, data: { ...backup.data, profiles: [oldProfile] } }
+
+    await importData(JSON.stringify(oldBackup), db)
+
+    expect(await db.profiles.toArray()).toEqual([{ ...oldProfile, fullName: '', address: '' }])
   })
 
   it('does not export the AI cache', async () => {

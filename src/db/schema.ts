@@ -44,6 +44,10 @@ export const ProfileSchema = z.object({
   id,
   /** Original CV text. Stays local; only an anonymized copy is ever sent to the API. */
   rawText: z.string(),
+  // Entered by the user so anonymization can replace them; never sent to the API.
+  // Defaults keep backups made before these fields existed importable.
+  fullName: z.string().default(''),
+  address: z.string().default(''),
   cv: CvDataSchema,
   updatedAt: timestamp,
 })
