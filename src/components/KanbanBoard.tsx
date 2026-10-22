@@ -25,9 +25,10 @@ export function KanbanBoard({ applications, scores, today, onMove, onOpen }: Kan
   }
 
   return (
-    // Stacked on phones (a sideways-scrolling board hides most columns there), side by side from sm up.
+    // Stacked on phones (a sideways-scrolling board hides most columns there), side by side from sm up,
+    // scrolling sideways on tablets and with all six columns visible at once on wide screens.
     <div className="-mx-4 px-4 pb-2 sm:overflow-x-auto">
-      <div className="grid gap-3 sm:auto-cols-[minmax(15rem,1fr)] sm:grid-flow-col">
+      <div className="grid gap-3 sm:auto-cols-[minmax(15rem,1fr)] sm:grid-flow-col lg:auto-cols-[minmax(0,1fr)]">
         {APPLICATION_STATUSES.map((status) => {
           const column = applications.filter((app) => app.status === status)
           return (
