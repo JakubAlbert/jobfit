@@ -91,6 +91,14 @@ of the request, so the same CV or posting is never sent twice. Tests mock this o
 the initial page load. No router (five screens use simple state navigation) and no drag and drop
 library (native drag and drop plus a status select, which also covers touch screens and keyboards).
 
+**Colour carries meaning.** Every application status has its own pastel, used the same way in the
+kanban columns, badges and the overview's pipeline bar, so a colour alone tells where an application
+stands. The match score bar is built from the skills themselves (must-have segments twice as wide),
+so it draws the scoring formula instead of decorating a number. Colours are semantic CSS tokens, so
+dark mode is defined once in [`src/index.css`](src/index.css) instead of on every element. The
+font (Bricolage Grotesque) is bundled with the app rather than loaded from Google Fonts, so Gemini
+stays the only external request.
+
 **Dates without time.** Tracker dates are plain `YYYY-MM-DD` in local time, which avoids
 off-by-one-day bugs around midnight UTC; "today" is a parameter so tests do not depend on the date.
 
@@ -132,7 +140,7 @@ Languages are shown next to the score but are not part of it: levels such as "B2
 ## Tech stack
 
 Vite, React 19, TypeScript (strict), Tailwind CSS 4, Dexie (IndexedDB), `@google/genai`, Zod,
-pdf.js, Vitest, oxlint, GitHub Actions.
+pdf.js, Bricolage Grotesque (self-hosted via Fontsource), Vitest, oxlint, GitHub Actions.
 
 ## Run locally
 
