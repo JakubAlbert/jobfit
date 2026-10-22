@@ -13,6 +13,7 @@ import {
 } from '../components/ui'
 import { APPLICATION_STATUSES, type Application, type ApplicationStatus, type JobPosting } from '../db/schema'
 import { changeStatus, todayIso } from '../lib/applications'
+import { applicationEvents, buildIcs, downloadIcs } from '../lib/calendar'
 
 interface ApplicationEditorProps {
   application: Application
@@ -30,6 +31,7 @@ export function ApplicationEditor(props: ApplicationEditorProps) {
   const [feedback, setFeedback] = useState<Feedback>(null)
 
   const set = <K extends keyof Application>(key: K, value: Application[K]) => setDraft({ ...draft, [key]: value })
+  const calendarEvents = applicationEvents(draft)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -108,6 +110,21 @@ export function ApplicationEditor(props: ApplicationEditorProps) {
         Pri zmene stavu sa prázdne dátumy vyplnia samé: po odoslaní dátum odoslania a follow-up o 7 dní, pri
         odpovedi firmy dátum odpovede.
       </p>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => downloadIcs(`jobfit-${slug(draft.company) || 'ziadost'}.ics`, buildIcs(calendarEvents))}
+          disabled={calendarEvents.length === 0}
+          className={secondaryButton}
+        >
+          Pridať do kalendára
+        </button>
+        <span className={hintClass}>
+          {calendarEvents.length === 0
+            ? 'Vyplň follow-up alebo termín pohovoru.'
+            : 'Stiahne súbor .ics s follow-upom a pohovorom pre Google, Outlook či Apple kalendár.'}
+        </span>
+      </div>
 
       <div>
         <label htmlFor="app-notes" className={labelClass}>
@@ -156,6 +173,16 @@ export function ApplicationEditor(props: ApplicationEditorProps) {
       <FeedbackMessage feedback={feedback} />
     </form>
   )
+}
+
+/** File-name friendly version of a company name: "Ukážka Tech s.r.o." → "ukazka-tech-s-r-o". */
+function slug(text: string): string {
+  return text
+    .normalize('NFKD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
 }
 
 function TextField(props: { id: string; label: string; value: string; onChange: (v: string) => void; required?: boolean }) {
