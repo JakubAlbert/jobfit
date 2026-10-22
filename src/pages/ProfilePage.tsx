@@ -189,7 +189,7 @@ export function ProfilePage({ onOpenSettings }: { onOpenSettings: () => void }) 
               <p className={`${hintClass} mb-2`}>
                 {replaced.length > 0
                   ? `Odstránené: ${replaced.join(', ')}.`
-                  : 'Nenašli sa žiadne osobné údaje. Vyplnil si meno a adresu?'}{' '}
+                  : 'Nenašli sa žiadne osobné údaje. Sú vyplnené meno a adresa?'}{' '}
                 Skontroluj, či v texte nezostalo nič osobné.
               </p>
               <pre className="max-h-80 overflow-auto rounded-md bg-slate-100 p-3 text-xs whitespace-pre-wrap dark:bg-slate-900">
