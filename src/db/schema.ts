@@ -87,17 +87,28 @@ export const AiInsightsSchema = z.object({
   rewrites: z.array(z.object({ original: z.string(), suggestion: z.string() })),
 })
 
+export const COVER_LETTER_LANGUAGES = ['sk', 'en'] as const
+
+export const CoverLetterSchema = z.object({
+  language: z.enum(COVER_LETTER_LANGUAGES),
+  text: z.string(),
+})
+
 export const AnalysisSchema = z.object({
   id,
   postingId: id,
   profileId: id,
-  /** Deterministic match score 0–100, computed in code, never by AI. */
-  score: z.number().min(0).max(100),
+  // Snapshot of the deterministic match at the time the AI part was generated.
+  // The app shows a live score computed from the current profile; this records what the AI saw.
+  /** Match score 0–100 computed in code, never by AI; null if the posting lists no skills. */
+  score: z.number().min(0).max(100).nullable(),
   matchedSkills: z.array(z.string()),
   missingMustHave: z.array(z.string()),
   missingNiceToHave: z.array(z.string()),
   /** Qualitative AI part; null if it has not been requested yet. */
   insights: AiInsightsSchema.nullable(),
+  /** Optional cover letter; the default keeps older backups importable. */
+  coverLetter: CoverLetterSchema.nullable().default(null),
   createdAt: timestamp,
 })
 
@@ -145,6 +156,8 @@ export type WorkMode = (typeof WORK_MODES)[number]
 export type JobRequirements = z.infer<typeof JobRequirementsSchema>
 export type JobPosting = z.infer<typeof JobPostingSchema>
 export type AiInsights = z.infer<typeof AiInsightsSchema>
+export type CoverLetterLanguage = (typeof COVER_LETTER_LANGUAGES)[number]
+export type CoverLetter = z.infer<typeof CoverLetterSchema>
 export type Analysis = z.infer<typeof AnalysisSchema>
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number]
 export type Application = z.infer<typeof ApplicationSchema>
