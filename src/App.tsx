@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { ProfilePage } from './pages/ProfilePage'
 import { SettingsPage } from './pages/SettingsPage'
 
 // Plain state-based navigation: a few screens do not justify a router dependency yet.
 const PAGES = [
   { id: 'home', label: 'Prehľad' },
+  { id: 'profile', label: 'Profil' },
   { id: 'settings', label: 'Nastavenia' },
 ] as const
 
@@ -41,6 +43,7 @@ function App() {
             </p>
           </div>
         )}
+        {page === 'profile' && <ProfilePage onOpenSettings={() => setPage('settings')} />}
         {page === 'settings' && <SettingsPage />}
       </main>
     </div>
