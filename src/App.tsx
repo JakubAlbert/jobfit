@@ -42,7 +42,7 @@ function App() {
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <header className="border-b border-slate-200 dark:border-slate-800">
-        <nav className="mx-auto flex max-w-5xl items-center gap-1 overflow-x-auto px-4 py-3">
+        <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-4 py-3">
           <span className="mr-3 shrink-0 text-lg font-bold">JobFit</span>
           {PAGES.map(({ id, label }) => (
             <button

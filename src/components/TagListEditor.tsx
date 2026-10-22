@@ -40,7 +40,7 @@ export function TagListEditor(props: {
               type="button"
               onClick={() => onChange(items.filter((other) => other !== item))}
               aria-label={`Odstrániť ${item}`}
-              className="rounded-full px-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+              className="rounded-full px-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100"
             >
               ×
             </button>

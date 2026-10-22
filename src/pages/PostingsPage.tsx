@@ -120,7 +120,7 @@ export function PostingsPage(props: PostingsPageProps) {
                   </span>
                   <span className={`shrink-0 text-xl font-bold ${scoreColor(score ?? null)}`}>
                     {score === undefined ? (
-                      <span className="text-sm font-normal text-slate-500">
+                      <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
                         {posting.requirements ? 'bez profilu' : 'neanalyzovaný'}
                       </span>
                     ) : score === null ? (

@@ -338,7 +338,7 @@ export function PostingDetail(props: PostingDetailProps) {
                     <ul className="space-y-3">
                       {analysis.insights.rewrites.map((rewrite) => (
                         <li key={rewrite.original} className="rounded-md bg-slate-100 p-3 dark:bg-slate-900">
-                          <p className="text-slate-500 line-through">{rewrite.original}</p>
+                          <p className="text-slate-500 dark:text-slate-400 line-through">{rewrite.original}</p>
                           <p className="mt-1">{rewrite.suggestion}</p>
                         </li>
                       ))}
@@ -431,7 +431,7 @@ function postingInfo(posting: JobPosting, requirements: JobRequirements) {
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-slate-500">{label}</dt>
+      <dt className="text-slate-500 dark:text-slate-400">{label}</dt>
       <dd>{value}</dd>
     </div>
   )

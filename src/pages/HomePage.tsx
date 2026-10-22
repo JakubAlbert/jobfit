@@ -73,7 +73,7 @@ export function HomePage({ onNavigate }: { onNavigate: (page: Target, id?: strin
                   {step.done ? '✓' : `${index + 1}.`}
                 </span>
                 {step.done ? (
-                  <span className="text-slate-500 line-through">{step.text}</span>
+                  <span className="text-slate-500 dark:text-slate-400 line-through">{step.text}</span>
                 ) : (
                   <button type="button" onClick={() => onNavigate(step.target)} className="underline">
                     {step.text}
@@ -157,7 +157,7 @@ function Stat({ label, value, detail }: { label: string; value: string; detail: 
     <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
       <p className={hintClass}>{label}</p>
       <p className="mt-1 text-3xl font-bold">{value}</p>
-      <p className="mt-1 text-xs text-slate-500">{detail}</p>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{detail}</p>
     </div>
   )
 }

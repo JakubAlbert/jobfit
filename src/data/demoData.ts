@@ -24,6 +24,8 @@ const requirements = (overrides: Partial<JobRequirements>): JobRequirements => (
 export function buildDemoBackup(today: string, now: Date = new Date()): Backup {
   const timestamp = now.toISOString()
   const day = (offset: number) => addDays(today, offset)
+  // Distinct creation times keep the postings list in a stable, meaningful order (newest first).
+  const createdDaysAgo = (days: number) => new Date(now.getTime() - days * 86_400_000).toISOString()
 
   const postings: JobPosting[] = [
     {
@@ -47,7 +49,7 @@ export function buildDemoBackup(today: string, now: Date = new Date()): Backup {
         salary: 'od 2 400 € brutto',
         languages: [{ language: 'English', level: 'B2' }],
       }),
-      createdAt: timestamp,
+      createdAt: createdDaysAgo(0),
     },
     {
       id: 'demo-posting-fullstack',
@@ -66,7 +68,7 @@ export function buildDemoBackup(today: string, now: Date = new Date()): Backup {
         seniority: 'senior',
         workMode: 'remote',
       }),
-      createdAt: timestamp,
+      createdAt: createdDaysAgo(1),
     },
     {
       id: 'demo-posting-analyst',
@@ -86,7 +88,7 @@ export function buildDemoBackup(today: string, now: Date = new Date()): Backup {
         workMode: 'onsite',
         languages: [{ language: 'German', level: '' }],
       }),
-      createdAt: timestamp,
+      createdAt: createdDaysAgo(2),
     },
   ]
 

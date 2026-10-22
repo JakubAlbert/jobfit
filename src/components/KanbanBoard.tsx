@@ -25,8 +25,9 @@ export function KanbanBoard({ applications, scores, today, onMove, onOpen }: Kan
   }
 
   return (
-    <div className="-mx-4 overflow-x-auto px-4 pb-2">
-      <div className="grid auto-cols-[minmax(15rem,1fr)] grid-flow-col gap-3">
+    // Stacked on phones (a sideways-scrolling board hides most columns there), side by side from sm up.
+    <div className="-mx-4 px-4 pb-2 sm:overflow-x-auto">
+      <div className="grid gap-3 sm:auto-cols-[minmax(15rem,1fr)] sm:grid-flow-col">
         {APPLICATION_STATUSES.map((status) => {
           const column = applications.filter((app) => app.status === status)
           return (
@@ -39,13 +40,13 @@ export function KanbanBoard({ applications, scores, today, onMove, onOpen }: Kan
               }}
               onDragLeave={() => setDropTarget(null)}
               onDrop={(event) => handleDrop(event, status)}
-              className={`min-h-40 rounded-lg p-2 ${
+              className={`rounded-lg p-2 sm:min-h-40 ${
                 dropTarget === status ? 'bg-blue-50 ring-2 ring-blue-400 dark:bg-blue-950' : 'bg-slate-50 dark:bg-slate-900'
               }`}
             >
               <h2 className="mb-2 flex justify-between px-1 text-sm font-semibold">
                 {STATUS_LABELS[status]}
-                <span className="text-slate-500">{column.length}</span>
+                <span className="text-slate-500 dark:text-slate-400">{column.length}</span>
               </h2>
               <ul className="space-y-2">
                 {column.map((app) => (
@@ -93,7 +94,7 @@ function KanbanCard(props: {
         <span className="block text-sm text-slate-600 dark:text-slate-400">{app.position}</span>
         {app.followUpDate && (
           <span
-            className={`mt-1 block text-xs ${followUpDue ? 'font-semibold text-amber-700 dark:text-amber-400' : 'text-slate-500'}`}
+            className={`mt-1 block text-xs ${followUpDue ? 'font-semibold text-amber-700 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}
           >
             {followUpDue ? 'Čas na follow-up' : 'Follow-up'} {formatDate(app.followUpDate)}
           </span>

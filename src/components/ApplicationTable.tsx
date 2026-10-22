@@ -116,7 +116,7 @@ export function ApplicationTable({ applications, scores, onOpen }: ApplicationTa
                     </td>
                     <td className="py-2 pr-4">{app.position}</td>
                     <td className="py-2 pr-4">
-                      <span className={`rounded-full px-2 py-0.5 text-xs ${STATUS_BADGE[app.status]}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs whitespace-nowrap ${STATUS_BADGE[app.status]}`}>
                         {STATUS_LABELS[app.status]}
                       </span>
                     </td>
