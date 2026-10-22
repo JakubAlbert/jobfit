@@ -1,4 +1,3 @@
-import { ApiError, GoogleGenAI } from '@google/genai'
 import { z } from 'zod'
 import { db as defaultDb, type JobFitDb } from '../db/db'
 
@@ -65,6 +64,8 @@ export async function generateStructured<T>(
     if (parsed?.success) return parsed.data
   }
 
+  // The SDK is large (~0.5 MB minified), so it is loaded on the first AI call, not with the page.
+  const { GoogleGenAI, ApiError } = await import('@google/genai')
   const ai = new GoogleGenAI({
     apiKey: config.apiKey,
     // Retries are handled below so the user can see what is happening.
@@ -88,7 +89,7 @@ export async function generateStructured<T>(
             },
           })
           .then((response) => response.text),
-      config.model,
+      (error) => toGeminiError(error, config.model, ApiError),
       request.onStatus,
     )
 
@@ -116,14 +117,14 @@ export async function generateStructured<T>(
 
 async function callWithBackoff(
   call: () => Promise<string | undefined>,
-  model: string,
+  mapError: (error: unknown) => GeminiError,
   onStatus?: (message: string) => void,
 ): Promise<string | undefined> {
   for (let retry = 0; ; retry++) {
     try {
       return await call()
     } catch (error) {
-      const mapped = toGeminiError(error, model)
+      const mapped = mapError(error)
       if (mapped.kind !== 'rate-limit' || retry >= RATE_LIMIT_DELAYS_MS.length) throw mapped
       const delay = RATE_LIMIT_DELAYS_MS[retry]
       onStatus?.(
@@ -152,7 +153,11 @@ function parseAnswer<T>(
     : { success: false, issue: z.prettifyError(result.error) }
 }
 
-function toGeminiError(error: unknown, model: string): GeminiError {
+function toGeminiError(
+  error: unknown,
+  model: string,
+  ApiError: typeof import('@google/genai').ApiError,
+): GeminiError {
   if (error instanceof GeminiError) return error
   if (error instanceof ApiError) {
     const { status, message } = error
