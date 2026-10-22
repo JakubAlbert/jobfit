@@ -46,8 +46,9 @@ function App() {
     db.open().catch(() => setStorageBlocked(true))
   }, [])
 
+  // A column as tall as the window in which main grows, so the footer sits at the bottom even on short pages.
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       {/* Desktop: logo left, sections centred, preferences right. Phones: sections move to a bottom bar. */}
       <header className="sticky top-0 z-20 border-b border-line bg-paper/85 backdrop-blur">
         <div className="mx-auto grid h-16 max-w-6xl grid-cols-[1fr_auto] items-center gap-4 px-4 md:grid-cols-[1fr_auto_1fr]">
@@ -101,7 +102,7 @@ function App() {
 
       {/* The key remounts a page on every navigation, so it starts fresh and opens the requested item.
           It also resets the error boundary, so an error on one page does not block the others. */}
-      <main key={`${route.page}:${route.id ?? ''}`} className="mx-auto max-w-6xl px-4 pt-8 pb-12 md:pt-12 md:pb-16">
+      <main key={`${route.page}:${route.id ?? ''}`} className="mx-auto w-full max-w-6xl flex-1 px-4 pt-8 pb-12 md:pt-12 md:pb-16">
         <ErrorBoundary>
           {route.page === 'home' && <HomePage onNavigate={go} />}
           {route.page === 'applications' && (
@@ -120,7 +121,7 @@ function App() {
         </ErrorBoundary>
       </main>
 
-      <footer className="mx-auto max-w-6xl px-4 pb-28 text-sm text-muted md:pb-10">
+      <footer className="mx-auto w-full max-w-6xl px-4 pb-28 text-sm text-muted md:pb-10">
         <div className="flex flex-wrap justify-between gap-2 border-t border-line pt-6">
           <p>© {YEAR} Jakub Albert</p>
           <p>Dáta zostávajú v tvojom prehliadači.</p>
