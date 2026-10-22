@@ -23,17 +23,24 @@ parts. I also built it as a portfolio project, so every decision below is delibe
 
 - **CV profile** – paste text or upload a PDF (text extracted in the browser with pdf.js). Gemini
   turns it into structured data (skills, experience, education, languages, certificates) that you
-  can review and edit. Personal data is removed before anything is sent.
+  can review and edit. Personal data is removed before anything is sent. Several CV versions
+  (e.g. frontend and fullstack); each posting can be compared with a chosen one.
 - **Job posting analysis** – Gemini extracts must-have and nice-to-have skills, seniority,
-  location, work mode, salary and languages. Extracted skills can be corrected by hand.
-- **Match score** – computed by plain code, with the full breakdown shown (see below).
+  location, work mode, salary and languages; a level named in the job title is read by code.
+  Everything can be corrected by hand, and an edited posting is analysed again.
+- **Match score** – computed by plain code, with the full breakdown shown (see below). Your own
+  skill synonyms can be added on top of the built-in dictionary.
 - **AI advice** – strengths, gaps and how to mitigate them, what to highlight, and rewrite
-  suggestions for CV bullet points. Optional cover letter draft in Slovak or English.
+  suggestions for CV bullet points. Likely interview questions with points from the CV to answer
+  them. Optional cover letter draft in Slovak or English.
 - **Application tracker** – kanban (drag and drop or a status select) and a sortable, searchable
-  table. Dates fill in automatically; a follow-up reminder is set 7 days after applying.
-- **Overview** – applications due for a follow-up, response rate and average time to response.
+  table. Dates fill in automatically, a follow-up reminder is set 7 days after applying, and every
+  status change is kept as a timeline. Follow-up and interview export to any calendar (.ics).
+- **Overview** – applications due for a follow-up, where all applications stand, response rate
+  and average time to response.
 - **Data** – JSON export and import (backup, moving between devices), delete everything.
-- Dark mode, works on phones, onboarding for the first run, sample data.
+- Every screen has an address, so Back works and postings can be bookmarked. Dark mode, works on
+  phones, onboarding for the first run, sample data.
 
 ## Architecture
 
@@ -87,9 +94,18 @@ retry, exponential backoff on HTTP 429 with a visible status for the user (the S
 retries are turned off for that reason), readable error messages and a cache keyed by the SHA-256
 of the request, so the same CV or posting is never sent twice. Tests mock this one dependency.
 
-**Small and fast.** The Gemini SDK and pdf.js are loaded only when first needed, keeping them out of
-the initial page load. No router (five screens use simple state navigation) and no drag and drop
-library (native drag and drop plus a status select, which also covers touch screens and keyboards).
+**Small and fast.** The Gemini SDK, pdf.js and every screen except the overview are loaded only
+when first needed, which halves the initial bundle. No router library: a small hash router ([`src/lib/router.ts`](src/lib/router.ts)) gives
+every screen an address; a hash is never sent to the server, so deep links work on static GitHub
+Pages, which cannot rewrite `/jobfit/inzeraty/123` to `index.html`. No drag and drop library either:
+native drag and drop plus a status select, which also covers touch screens and keyboards.
+
+**No server for reminders.** Follow-ups and interviews export as an iCalendar file (written by hand:
+escaping, UTF-8-aware line folding, all-day and floating-time events), so the user's own calendar
+sends the reminders.
+
+**Schema changes stay compatible.** New fields always get Zod defaults and new tables a new Dexie
+version, so every backup ever exported still imports; tests check this for each change.
 
 **Colour carries meaning.** Every application status has its own earthy pastel, used the same way in the
 kanban columns, badges and the overview's pipeline bar, so a colour alone tells where an application
@@ -152,6 +168,7 @@ npm run dev     # http://localhost:5173/jobfit/
 npm test        # unit tests (Vitest)
 npm run lint    # oxlint
 npm run build   # type check and production build into dist/
+npm run test:e2e  # end-to-end tests (Playwright) against the build; uses the installed Edge locally
 ```
 
 Every push to `main` is linted, tested and built by GitHub Actions and deployed to GitHub Pages if
@@ -165,11 +182,16 @@ all checks pass ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## Tests
 
-About 140 unit tests cover the parts where a bug would silently give wrong results: anonymization
-(including numbers that must *not* be treated as phone numbers), skill normalization and synonyms,
-the match score, Zod schemas and invalid AI responses, the Gemini module with a mocked API
-(including HTTP 429 backoff and the cache), backup export and import, tracker dates and statistics,
-and the demo data. UI components have smoke tests rendered to a string.
+About 190 unit tests (Vitest) cover the parts where a bug would silently give wrong results:
+anonymization (including numbers that must *not* be treated as phone numbers), skill normalization
+and synonyms, the match score, seniority from titles, Zod schemas and invalid AI responses, the
+Gemini module with a mocked API (including HTTP 429 backoff and the cache), backup export and import
+(including backups from before each schema change), tracker dates, history and statistics, the
+calendar file format, routing and the demo data. UI components have smoke tests rendered to a string.
+
+End-to-end tests (Playwright, [`e2e/`](e2e/)) run the production build in a real browser on desktop
+and phone sizes: demo data, the score, the board, Back and deep links, status history, editing a
+posting, custom synonyms and the calendar download. CI runs them on every push.
 
 ## Project structure
 
@@ -177,20 +199,18 @@ and the demo data. UI components have smoke tests rendered to a string.
 src/
   data/       synonym dictionary, demo data
   db/         Zod schemas (single source of types), Dexie database, backup
-  lib/        logic: gemini, anonymize, pdf, skills, matchScore, applications, settings, theme
+  lib/        logic: gemini, anonymize, pdf, skills, matchScore, applications, calendar, router, …
   prompts/    all prompts, kept short and separate from code
   components/ reusable UI
   pages/      screens
+e2e/          end-to-end tests (Playwright)
 docs/         original project spec (Slovak) and screenshots
 ```
 
 ## What I would improve next
 
-- Several CV versions (e.g. one per role type) and choosing which one to compare.
-- An editable synonym dictionary, so users can teach the matcher their field's vocabulary.
 - Comparing language levels on the CEFR scale where both sides use it.
-- End-to-end tests with Playwright for the main flows.
-- Real URLs for screens (a router), so a posting or application can be bookmarked.
+- Statistics over time from the status history (e.g. time spent in each stage, applications per week).
 - Offline support as an installable PWA; OCR for scanned PDF CVs.
 - Optional sync between devices without giving up the no-backend model (e.g. an encrypted file in
   the user's own cloud storage).
