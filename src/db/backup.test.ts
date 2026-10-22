@@ -30,6 +30,8 @@ const application: Application = {
   appliedDate: '2026-10-20',
   responseDate: null,
   followUpDate: '2026-10-27',
+  interviewAt: null,
+  history: [{ status: 'applied', date: '2026-10-20' }],
   notes: '',
   createdAt: NOW,
   updatedAt: NOW,
@@ -76,6 +78,16 @@ describe('exportData / importData', () => {
     await importData(JSON.stringify(oldBackup), db)
 
     expect(await db.profiles.toArray()).toEqual([{ ...oldProfile, fullName: '', address: '' }])
+  })
+
+  it('imports a backup made before applications had history and interview time', async () => {
+    const backup = await exportData(db)
+    const { history: _history, interviewAt: _interviewAt, ...oldApplication } = application
+    const oldBackup = { ...backup, data: { ...backup.data, applications: [oldApplication] } }
+
+    await importData(JSON.stringify(oldBackup), db)
+
+    expect(await db.applications.toArray()).toEqual([{ ...oldApplication, history: [], interviewAt: null }])
   })
 
   it('does not export the AI cache', async () => {

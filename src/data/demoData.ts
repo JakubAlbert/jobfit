@@ -92,17 +92,31 @@ export function buildDemoBackup(today: string, now: Date = new Date()): Backup {
     },
   ]
 
-  const application = (fields: Partial<Application> & Pick<Application, 'id' | 'company' | 'position'>): Application => ({
-    postingId: null,
-    status: 'saved',
-    appliedDate: null,
-    responseDate: null,
-    followUpDate: null,
-    notes: '',
-    createdAt: timestamp,
-    updatedAt: timestamp,
-    ...fields,
-  })
+  const application = (fields: Partial<Application> & Pick<Application, 'id' | 'company' | 'position'>): Application => {
+    const app: Application = {
+      postingId: null,
+      status: 'saved',
+      appliedDate: null,
+      responseDate: null,
+      followUpDate: null,
+      interviewAt: null,
+      history: [],
+      notes: '',
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      ...fields,
+    }
+    // A plausible timeline from the dates: saved two days before sending, then the reply.
+    const history: Application['history'] = [
+      { status: 'saved', date: app.appliedDate ? addDays(app.appliedDate, -2) : day(-1) },
+    ]
+    if (app.appliedDate) history.push({ status: 'applied', date: app.appliedDate })
+    if (app.responseDate && app.status !== 'applied') history.push({ status: app.status, date: app.responseDate })
+    if (app.status === 'no_response' && app.appliedDate) {
+      history.push({ status: 'no_response', date: addDays(app.appliedDate, 21) })
+    }
+    return { ...app, history }
+  }
 
   return {
     format: BACKUP_FORMAT,
@@ -187,6 +201,7 @@ export function buildDemoBackup(today: string, now: Date = new Date()): Backup {
           appliedDate: day(-12),
           responseDate: day(-5),
           followUpDate: day(2),
+          interviewAt: `${day(2)}T10:00`,
           notes: 'Technické kolo s dvoma vývojármi.',
         }),
         application({

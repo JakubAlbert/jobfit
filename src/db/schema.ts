@@ -123,6 +123,11 @@ export const APPLICATION_STATUSES = [
   'no_response',
 ] as const
 
+export const StatusChangeSchema = z.object({
+  status: z.enum(APPLICATION_STATUSES),
+  date,
+})
+
 export const ApplicationSchema = z.object({
   id,
   company: z.string(),
@@ -132,6 +137,14 @@ export const ApplicationSchema = z.object({
   appliedDate: date.nullable(),
   responseDate: date.nullable(),
   followUpDate: date.nullable(),
+  /** Local date and time of an interview (YYYY-MM-DDTHH:mm), for the calendar export. */
+  interviewAt: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)
+    .nullable()
+    .default(null),
+  /** Every status the application went through, oldest first. */
+  history: z.array(StatusChangeSchema).default([]),
   notes: z.string(),
   createdAt: timestamp,
   updatedAt: timestamp,
@@ -160,5 +173,6 @@ export type CoverLetterLanguage = (typeof COVER_LETTER_LANGUAGES)[number]
 export type CoverLetter = z.infer<typeof CoverLetterSchema>
 export type Analysis = z.infer<typeof AnalysisSchema>
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number]
+export type StatusChange = z.infer<typeof StatusChangeSchema>
 export type Application = z.infer<typeof ApplicationSchema>
 export type AiCacheEntry = z.infer<typeof AiCacheEntrySchema>

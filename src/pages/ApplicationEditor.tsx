@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { STATUS_LABELS } from '../components/statusLabels'
+import { formatDate, STATUS_BADGE, STATUS_LABELS } from '../components/statusLabels'
 import {
   dangerButton,
   FeedbackMessage,
@@ -87,10 +87,22 @@ export function ApplicationEditor(props: ApplicationEditorProps) {
         </select>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <DateField id="app-applied" label="Poslané" value={draft.appliedDate} onChange={(v) => set('appliedDate', v)} />
         <DateField id="app-response" label="Odpoveď" value={draft.responseDate} onChange={(v) => set('responseDate', v)} />
         <DateField id="app-follow-up" label="Follow-up" value={draft.followUpDate} onChange={(v) => set('followUpDate', v)} />
+        <div>
+          <label htmlFor="app-interview" className={labelClass}>
+            Pohovor
+          </label>
+          <input
+            id="app-interview"
+            type="datetime-local"
+            value={draft.interviewAt ?? ''}
+            onChange={(e) => set('interviewAt', e.target.value || null)}
+            className={`${inputClass} mt-1`}
+          />
+        </div>
       </div>
       <p className={hintClass}>
         Pri zmene stavu sa prázdne dátumy vyplnia samé: po odoslaní dátum odoslania a follow-up o 7 dní, pri
@@ -109,6 +121,24 @@ export function ApplicationEditor(props: ApplicationEditorProps) {
           className={`${inputClass} mt-1`}
         />
       </div>
+
+      {draft.history.length > 0 && (
+        <div>
+          <h2 className="mb-3 text-lg font-semibold">História</h2>
+          {/* A timeline: each status the application went through, with the day it happened. */}
+          <ol className="relative space-y-3 border-l-2 border-line pl-5">
+            {draft.history.map((change, index) => (
+              <li key={`${change.status}-${change.date}-${index}`} className="relative">
+                <span className="absolute top-1.5 -left-[27px] size-3 rounded-full bg-accent ring-4 ring-paper" />
+                <span className={`rounded-full px-2.5 py-0.5 text-sm font-semibold ${STATUS_BADGE[change.status]}`}>
+                  {STATUS_LABELS[change.status]}
+                </span>
+                <span className="ml-2 text-sm text-muted">{formatDate(change.date)}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <button type="submit" className={primaryButton}>

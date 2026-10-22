@@ -39,6 +39,27 @@ describe('newApplication', () => {
     const created = newApplication({ company: ' Acme ', position: 'Dev', postingId: 'p1' })
     expect(created).toMatchObject({ company: 'Acme', status: 'saved', postingId: 'p1', appliedDate: null })
   })
+
+  it('starts its history with the day it was saved', () => {
+    const created = newApplication({ company: 'Acme', position: 'Dev' }, new Date(2026, 9, 22, 9, 0))
+    expect(created.history).toEqual([{ status: 'saved', date: '2026-10-22' }])
+  })
+})
+
+describe('changeStatus history', () => {
+  it('records every status change with its date', () => {
+    const applied = changeStatus(app({ history: [] }), 'applied', '2026-10-15')
+    const interview = changeStatus(applied, 'interview', TODAY)
+    expect(interview.history).toEqual([
+      { status: 'applied', date: '2026-10-15' },
+      { status: 'interview', date: TODAY },
+    ])
+  })
+
+  it('does nothing when the status stays the same', () => {
+    const applied = changeStatus(app({ history: [] }), 'applied', '2026-10-15')
+    expect(changeStatus(applied, 'applied', TODAY)).toBe(applied)
+  })
 })
 
 describe('changeStatus', () => {

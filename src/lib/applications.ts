@@ -54,6 +54,8 @@ export function newApplication(
     appliedDate: null,
     responseDate: null,
     followUpDate: null,
+    interviewAt: null,
+    history: [{ status: 'saved', date: toIsoDate(now) }],
     notes: '',
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -65,7 +67,8 @@ export function newApplication(
  * Any transition is allowed (real processes are not linear). Dates entered by the user are never overwritten.
  */
 export function changeStatus(app: Application, status: ApplicationStatus, today: string): Application {
-  const next: Application = { ...app, status }
+  if (status === app.status) return app
+  const next: Application = { ...app, status, history: [...app.history, { status, date: today }] }
   if (status === 'applied') {
     next.appliedDate ??= today
     next.followUpDate ??= addDays(today, FOLLOW_UP_DAYS)
