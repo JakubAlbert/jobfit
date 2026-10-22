@@ -1,7 +1,15 @@
-/** Text color class for a match score: green from 70, amber from 40, red below. */
+/** Text color class for a match score: mint from 70, peach from 40, rose below. */
 export function scoreColor(score: number | null): string {
-  if (score === null) return 'text-slate-500 dark:text-slate-400'
-  if (score >= 70) return 'text-green-700 dark:text-green-400'
-  if (score >= 40) return 'text-amber-700 dark:text-amber-400'
-  return 'text-red-700 dark:text-red-400'
+  if (score === null) return 'text-muted'
+  if (score >= 70) return 'text-offer-ink'
+  if (score >= 40) return 'text-peach-ink'
+  return 'text-rejected-ink'
+}
+
+/** Background + text classes for a score shown as a chip. */
+export function scoreChip(score: number | null): string {
+  if (score === null) return 'bg-sunken text-muted'
+  if (score >= 70) return 'bg-offer text-offer-ink'
+  if (score >= 40) return 'bg-peach text-peach-ink'
+  return 'bg-rejected text-rejected-ink'
 }

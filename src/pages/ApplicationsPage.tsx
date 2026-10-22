@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ApplicationTable } from '../components/ApplicationTable'
 import { KanbanBoard } from '../components/KanbanBoard'
-import { hintClass, primaryButton } from '../components/ui'
+import { EmptyState, hintClass, PageHeader, primaryButton } from '../components/ui'
 import { db, PROFILE_ID } from '../db/db'
 import type { Application, ApplicationStatus, JobPosting, Profile } from '../db/schema'
 import { changeStatus, newApplication, todayIso } from '../lib/applications'
@@ -113,17 +113,19 @@ export function ApplicationsPage({ initialId, onOpenPosting }: ApplicationsPageP
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">Žiadosti</h1>
-        <div className="flex flex-wrap gap-2">
-          <div role="group" aria-label="Zobrazenie" className="flex rounded-md border border-slate-300 dark:border-slate-700">
+      <PageHeader
+        title="Žiadosti"
+        lead="Posúvaj žiadosti medzi stavmi ťahaním alebo cez výber na karte."
+        actions={
+          <>
+          <div role="group" aria-label="Zobrazenie" className="flex rounded-xl bg-sunken p-1">
             {(['kanban', 'table'] as const).map((option) => (
               <button
                 key={option}
                 type="button"
                 onClick={() => switchLayout(option)}
                 aria-pressed={layout === option}
-                className="px-3 py-2 text-sm font-medium first:rounded-l-md last:rounded-r-md aria-pressed:bg-slate-900 aria-pressed:text-white dark:aria-pressed:bg-slate-100 dark:aria-pressed:text-slate-900"
+                className="rounded-lg px-3 py-1.5 text-sm font-semibold text-muted transition-colors hover:text-ink aria-pressed:bg-surface aria-pressed:text-accent aria-pressed:shadow-sm"
               >
                 {option === 'kanban' ? 'Kanban' : 'Tabuľka'}
               </button>
@@ -136,17 +138,15 @@ export function ApplicationsPage({ initialId, onOpenPosting }: ApplicationsPageP
           >
             Pridať žiadosť
           </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {data.applications.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center dark:border-slate-700">
-          <p className="font-medium">Zatiaľ nesleduješ žiadnu žiadosť.</p>
-          <p className={`${hintClass} mt-1`}>
-            Vytvor ju z detailu analyzovaného inzerátu alebo ručne tlačidlom „Pridať žiadosť“. Potom ju posúvaj
-            medzi stavmi a appka ti pripomenie, kedy sa firme ozvať.
-          </p>
-        </div>
+        <EmptyState title="Zatiaľ nesleduješ žiadnu žiadosť">
+          Vytvor ju z detailu analyzovaného inzerátu alebo ručne tlačidlom „Pridať žiadosť“. Potom ju posúvaj
+          medzi stavmi a appka ti pripomenie, kedy sa firme ozvať.
+        </EmptyState>
       ) : layout === 'kanban' ? (
         <KanbanBoard
           applications={data.applications}

@@ -72,7 +72,7 @@ export function ApplicationTable({ applications, scores, onOpen }: ApplicationTa
       ) : (
         <div className="-mx-4 overflow-x-auto px-4">
           <table className="w-full min-w-[40rem] text-left text-sm">
-            <thead className="border-b border-slate-200 dark:border-slate-800">
+            <thead className="border-b border-line text-muted">
               <tr>
                 {COLUMNS.map((column) => (
                   <th
@@ -99,7 +99,7 @@ export function ApplicationTable({ applications, scores, onOpen }: ApplicationTa
                   <tr
                     key={app.id}
                     onClick={() => onOpen(app)}
-                    className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 dark:border-slate-900 dark:hover:bg-slate-900"
+                    className="cursor-pointer border-b border-line/70 transition-colors hover:bg-sunken"
                   >
                     <td className="py-2 pr-4">
                       {/* The button makes rows reachable by keyboard; the row click is a mouse shortcut. */}

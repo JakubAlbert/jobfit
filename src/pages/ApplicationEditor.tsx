@@ -4,6 +4,7 @@ import {
   dangerButton,
   FeedbackMessage,
   hintClass,
+  linkClass,
   inputClass,
   labelClass,
   primaryButton,
@@ -46,14 +47,16 @@ export function ApplicationEditor(props: ApplicationEditorProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <button type="button" onClick={onClose} className="text-sm underline">
-          ← Späť na žiadosti
+        <button type="button" onClick={onClose} className={`${linkClass} text-sm`}>
+          Späť na žiadosti
         </button>
-        <h1 className="mt-2 text-2xl font-bold">{isNew ? 'Nová žiadosť' : 'Žiadosť'}</h1>
+        <h1 className="mt-4 text-4xl font-bold sm:text-5xl">
+          {isNew ? 'Nová žiadosť' : draft.company || 'Žiadosť'}
+        </h1>
         {posting && (
           <p className={hintClass}>
             Prepojený inzerát:{' '}
-            <button type="button" onClick={() => onOpenPosting(posting.id)} className="underline">
+            <button type="button" onClick={() => onOpenPosting(posting.id)} className={linkClass}>
               {posting.title || 'Inzerát bez názvu'}
             </button>
           </p>

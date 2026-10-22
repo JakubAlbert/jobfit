@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { CvEditor } from '../components/CvEditor'
 import {
   FeedbackMessage,
+  PageHeader,
   hintClass,
   inputClass,
   labelClass,
@@ -116,7 +117,10 @@ export function ProfilePage({ onOpenSettings }: { onOpenSettings: () => void }) 
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Profil</h1>
+      <PageHeader
+        title="Profil"
+        lead="Tvoje CV v štruktúrovanej podobe. Z neho sa počíta zhoda so všetkými inzerátmi."
+      />
 
       {step === 'input' ? (
         <>
@@ -194,7 +198,7 @@ export function ProfilePage({ onOpenSettings }: { onOpenSettings: () => void }) 
                   : 'Nenašli sa žiadne osobné údaje. Sú vyplnené meno a adresa?'}{' '}
                 Skontroluj, či v texte nezostalo nič osobné.
               </p>
-              <pre className="max-h-80 overflow-auto rounded-md bg-slate-100 p-3 text-xs whitespace-pre-wrap dark:bg-slate-900">
+              <pre className="max-h-80 overflow-auto rounded-2xl bg-sunken p-4 text-xs leading-relaxed whitespace-pre-wrap">
                 {preview.text}
               </pre>
             </Section>

@@ -1,7 +1,7 @@
 import { useState, type DragEvent } from 'react'
 import { APPLICATION_STATUSES, type Application, type ApplicationStatus } from '../db/schema'
-import { scoreColor } from './scoreColor'
-import { formatDate, STATUS_LABELS } from './statusLabels'
+import { scoreChip } from './scoreColor'
+import { formatDate, STATUS_BADGE, STATUS_LABELS, STATUS_WASH } from './statusLabels'
 
 interface KanbanBoardProps {
   applications: Application[]
@@ -41,13 +41,16 @@ export function KanbanBoard({ applications, scores, today, onMove, onOpen }: Kan
               }}
               onDragLeave={() => setDropTarget(null)}
               onDrop={(event) => handleDrop(event, status)}
-              className={`rounded-lg p-2 sm:min-h-40 ${
-                dropTarget === status ? 'bg-blue-50 ring-2 ring-blue-400 dark:bg-blue-950' : 'bg-slate-50 dark:bg-slate-900'
+              // Each column reads as a coloured binder tab: the status colour heads and tints it.
+              className={`rounded-2xl p-2 sm:min-h-48 ${STATUS_WASH[status]} ${
+                dropTarget === status ? 'ring-2 ring-accent' : ''
               }`}
             >
-              <h2 className="mb-2 flex justify-between px-1 text-sm font-semibold">
+              <h2
+                className={`mb-2 flex items-center justify-between rounded-xl px-3 py-2 font-sans text-sm font-bold ${STATUS_BADGE[status]}`}
+              >
                 {STATUS_LABELS[status]}
-                <span className="text-slate-500 dark:text-slate-400">{column.length}</span>
+                <span className="rounded-full bg-surface/70 px-2 text-xs">{column.length}</span>
               </h2>
               <ul className="space-y-2">
                 {column.map((app) => (
@@ -83,19 +86,23 @@ function KanbanCard(props: {
     <li
       draggable
       onDragStart={(event) => event.dataTransfer.setData('text/plain', app.id)}
-      className="cursor-grab rounded-md border border-slate-200 bg-white p-3 shadow-sm active:cursor-grabbing dark:border-slate-700 dark:bg-slate-950"
+      className="cursor-grab rounded-xl bg-surface p-3 ring-1 ring-line active:cursor-grabbing"
     >
       <button type="button" onClick={() => onOpen(app)} className="block w-full text-left">
         <span className="flex items-start justify-between gap-2">
-          <span className="font-medium">{app.company || 'Bez firmy'}</span>
+          <span className="font-semibold">{app.company || 'Bez firmy'}</span>
           {score !== undefined && (
-            <span className={`text-sm font-semibold whitespace-nowrap ${scoreColor(score)}`}>{score === null ? '–' : `${score} %`}</span>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap ${scoreChip(score)}`}>
+              {score === null ? '–' : `${score} %`}
+            </span>
           )}
         </span>
-        <span className="block text-sm text-slate-600 dark:text-slate-400">{app.position}</span>
+        <span className="mt-0.5 block text-sm text-muted">{app.position}</span>
         {app.followUpDate && (
           <span
-            className={`mt-1 block text-xs ${followUpDue ? 'font-semibold text-amber-700 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}
+            className={`mt-2 inline-block text-xs ${
+              followUpDue ? 'rounded-full bg-peach px-2 py-0.5 font-semibold text-peach-ink' : 'text-muted'
+            }`}
           >
             {followUpDue ? 'Čas na follow-up' : 'Follow-up'} {formatDate(app.followUpDate)}
           </span>
@@ -105,7 +112,7 @@ function KanbanCard(props: {
         value={app.status}
         onChange={(e) => onMove(app, e.target.value as ApplicationStatus)}
         aria-label={`Stav žiadosti ${app.company}`}
-        className="mt-2 w-full rounded border border-slate-200 bg-transparent px-2 py-1 text-xs dark:border-slate-700"
+        className="mt-3 w-full rounded-lg border border-line bg-sunken px-2 py-1.5 text-xs font-semibold text-muted"
       >
         {APPLICATION_STATUSES.map((status) => (
           <option key={status} value={status}>

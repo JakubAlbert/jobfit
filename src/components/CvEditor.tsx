@@ -84,7 +84,7 @@ function EntryListEditor<T extends Record<string, string>>(props: {
       <div className="space-y-3">
         {items.map((item, index) => (
           // Entries have no stable id; index keys are fine because items are only appended or removed.
-          <div key={index} className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
+          <div key={index} className="rounded-2xl bg-sunken p-4">
             <div className="grid gap-3 sm:grid-cols-2">
               {fields.map((field) => {
                 const id = `${baseId}-${index}-${field.key}`
@@ -116,7 +116,7 @@ function EntryListEditor<T extends Record<string, string>>(props: {
             <button
               type="button"
               onClick={() => onChange(items.filter((_, i) => i !== index))}
-              className="mt-3 text-sm text-red-700 hover:underline dark:text-red-400"
+              className="mt-3 text-sm font-semibold text-rejected-ink hover:underline"
             >
               Odstrániť
             </button>

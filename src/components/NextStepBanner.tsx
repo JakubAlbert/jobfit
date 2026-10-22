@@ -40,8 +40,8 @@ export function NextStepBanner({ page, onNavigate }: NextStepBannerProps) {
   if (!next || dismissed || page === 'home') return null
 
   return (
-    <div className="border-b border-blue-200 bg-blue-50 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
+    <div className="bg-accent-soft text-sm text-interview-ink">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
         <span>
           Krok {next.number} z 3: <strong>{next.text}</strong>
         </span>
@@ -56,7 +56,7 @@ export function NextStepBanner({ page, onNavigate }: NextStepBannerProps) {
             dismissOnboarding()
             setDismissed(true)
           }}
-          className="ml-auto text-blue-700 hover:underline dark:text-blue-300"
+          className="ml-auto font-semibold opacity-70 hover:underline hover:opacity-100"
         >
           Skryť
         </button>

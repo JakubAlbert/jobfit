@@ -2,6 +2,7 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import {
   dangerButton,
   FeedbackMessage,
+  PageHeader,
   hintClass,
   inputClass,
   labelClass,
@@ -15,10 +16,8 @@ import { clearAllData, exportData, importData, ImportError } from '../db/backup'
 import { generateStructured, GeminiError } from '../lib/gemini'
 import { clearSettings, DEFAULT_MODEL, loadSettings, saveSettings } from '../lib/settings'
 import { notifyOnboardingProgress } from '../lib/onboarding'
-import { applyTheme, loadTheme, saveTheme, THEMES, type Theme } from '../lib/theme'
 import { connectionTestPrompt, connectionTestSchema } from '../prompts/connectionTest'
 
-const THEME_LABELS: Record<Theme, string> = { system: 'Podľa systému', light: 'Svetlý', dark: 'Tmavý' }
 
 export function SettingsPage() {
   const [apiKey, setApiKey] = useState(() => loadSettings().apiKey)
@@ -28,13 +27,6 @@ export function SettingsPage() {
   const [testing, setTesting] = useState(false)
   const [dataFeedback, setDataFeedback] = useState<Feedback>(null)
   const fileInput = useRef<HTMLInputElement>(null)
-  const [theme, setTheme] = useState<Theme>(loadTheme)
-
-  function handleTheme(next: Theme) {
-    setTheme(next)
-    saveTheme(next)
-    applyTheme(next)
-  }
 
   function handleSave(event: FormEvent) {
     event.preventDefault()
@@ -123,7 +115,7 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Nastavenia</h1>
+      <PageHeader title="Nastavenia" lead="API kľúč, súkromie a tvoje dáta. Vzhľad prepneš ikonami v hlavičke." />
 
       <Section title="Gemini API">
         <form onSubmit={handleSave} className="space-y-4">
@@ -190,28 +182,8 @@ export function SettingsPage() {
         </form>
       </Section>
 
-      <Section title="Vzhľad">
-        <fieldset>
-          <legend className="sr-only">Téma</legend>
-          <div className="flex flex-wrap gap-4">
-            {THEMES.map((option) => (
-              <label key={option} className="flex items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="theme"
-                  value={option}
-                  checked={theme === option}
-                  onChange={() => handleTheme(option)}
-                />
-                {THEME_LABELS[option]}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-      </Section>
-
       <Section title="Súkromie">
-        <p className="text-sm text-slate-700 dark:text-slate-300">
+        <p className="max-w-prose text-sm leading-relaxed">
           Pri bezplatnej verzii Gemini API môže Google odoslané dáta použiť na zlepšovanie svojich
           modelov. Preto JobFit pred odoslaním z CV odstráni meno, e-mail, telefón a adresu. Všetky
           ostatné dáta zostávajú len v tomto prehliadači. Aplikácia nepoužíva žiadnu analytiku ani

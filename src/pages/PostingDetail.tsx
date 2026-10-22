@@ -5,6 +5,7 @@ import {
   dangerButton,
   FeedbackMessage,
   hintClass,
+  linkClass,
   inputClass,
   primaryButton,
   secondaryButton,
@@ -200,19 +201,16 @@ export function PostingDetail(props: PostingDetailProps) {
   return (
     <div className="space-y-6">
       <div>
-        <button type="button" onClick={onBack} className="text-sm underline">
-          ← Späť na inzeráty
+        <button type="button" onClick={onBack} className={`${linkClass} text-sm`}>
+          Späť na inzeráty
         </button>
-        <h1 className="mt-2 text-2xl font-bold">{posting.title || 'Inzerát bez názvu'}</h1>
-        <p className={hintClass}>
+        <h1 className="mt-4 text-4xl font-bold sm:text-5xl">{posting.title || 'Inzerát bez názvu'}</h1>
+        <p className="mt-2 text-lg text-muted">
           {posting.company || 'Firma neuvedená'}
           {posting.url && (
-            <>
-              {' · '}
-              <a href={posting.url} target="_blank" rel="noreferrer" className="underline">
-                pôvodný inzerát
-              </a>
-            </>
+            <a href={posting.url} target="_blank" rel="noreferrer" className={`${linkClass} ml-3 text-sm`}>
+              Pôvodný inzerát
+            </a>
           )}
         </p>
       </div>
@@ -313,7 +311,7 @@ export function PostingDetail(props: PostingDetailProps) {
             {analysis?.insights ? (
               <div className="space-y-5 text-sm">
                 {insightsOutdated && (
-                  <p className="text-amber-700 dark:text-amber-400">
+                  <p className="rounded-xl bg-peach px-4 py-2.5 text-peach-ink">
                     Odporúčania vznikli pri inom skóre ({analysis.score ?? '–'} %). Profil alebo požiadavky
                     sa odvtedy zmenili, zváž ich vygenerovať znova.
                   </p>
@@ -337,9 +335,9 @@ export function PostingDetail(props: PostingDetailProps) {
                     <h3 className="mb-1 font-semibold">Návrhy preformulovania</h3>
                     <ul className="space-y-3">
                       {analysis.insights.rewrites.map((rewrite) => (
-                        <li key={rewrite.original} className="rounded-md bg-slate-100 p-3 dark:bg-slate-900">
-                          <p className="text-slate-500 dark:text-slate-400 line-through">{rewrite.original}</p>
-                          <p className="mt-1">{rewrite.suggestion}</p>
+                        <li key={rewrite.original} className="grid gap-2 rounded-2xl bg-sunken p-4 sm:grid-cols-2">
+                          <p className="text-muted line-through decoration-muted/50">{rewrite.original}</p>
+                          <p className="rounded-xl bg-offer px-3 py-2 text-offer-ink">{rewrite.suggestion}</p>
                         </li>
                       ))}
                     </ul>
@@ -377,7 +375,7 @@ export function PostingDetail(props: PostingDetailProps) {
                 id="letter-language"
                 value={letterLanguage}
                 onChange={(e) => setLetterLanguage(e.target.value as CoverLetterLanguage)}
-                className={`${inputClass} w-auto`}
+                className={`${inputClass} w-auto sm:w-48`}
               >
                 <option value="sk">slovenčina</option>
                 <option value="en">angličtina</option>
@@ -393,7 +391,7 @@ export function PostingDetail(props: PostingDetailProps) {
             </div>
             {analysis?.coverLetter && (
               <div className="mt-4">
-                <pre className="rounded-md bg-slate-100 p-3 font-sans text-sm whitespace-pre-wrap dark:bg-slate-900">
+                <pre className="rounded-2xl bg-sunken p-5 font-sans text-sm leading-relaxed whitespace-pre-wrap">
                   {analysis.coverLetter.text}
                 </pre>
                 <button
@@ -411,8 +409,8 @@ export function PostingDetail(props: PostingDetailProps) {
       )}
 
       <details>
-        <summary className="cursor-pointer text-sm font-medium">Text inzerátu</summary>
-        <pre className="mt-2 max-h-96 overflow-auto rounded-md bg-slate-100 p-3 font-sans text-sm whitespace-pre-wrap dark:bg-slate-900">
+        <summary className="cursor-pointer text-sm font-semibold text-accent">Text inzerátu</summary>
+        <pre className="mt-3 max-h-96 overflow-auto rounded-2xl bg-sunken p-5 font-sans text-sm leading-relaxed whitespace-pre-wrap">
           {posting.text}
         </pre>
       </details>
@@ -431,7 +429,7 @@ function postingInfo(posting: JobPosting, requirements: JobRequirements) {
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-slate-500 dark:text-slate-400">{label}</dt>
+      <dt className="text-muted">{label}</dt>
       <dd>{value}</dd>
     </div>
   )

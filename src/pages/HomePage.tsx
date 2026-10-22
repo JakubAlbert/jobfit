@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { formatDate, STATUS_LABELS } from '../components/statusLabels'
-import { hintClass, secondaryButton, Section } from '../components/ui'
+import { formatDate, STATUS_BADGE, STATUS_BAR, STATUS_LABELS } from '../components/statusLabels'
+import { EmptyState, hintClass, linkClass, PageHeader, primaryButton, secondaryButton, Section } from '../components/ui'
 import { DEMO_PROFILE_TEXT, loadDemoData } from '../data/demoData'
 import { db, PROFILE_ID } from '../db/db'
-import type { Application } from '../db/schema'
-import { addDays, computeStats, dueFollowUps, FOLLOW_UP_DAYS, todayIso } from '../lib/applications'
+import { APPLICATION_STATUSES, type Application } from '../db/schema'
+import { ACTIVE_STATUSES, addDays, computeStats, dueFollowUps, FOLLOW_UP_DAYS, todayIso } from '../lib/applications'
 import { onboardingSteps } from '../lib/onboarding'
 import { loadSettings } from '../lib/settings'
 
@@ -32,6 +32,7 @@ export function HomePage({ onNavigate }: { onNavigate: (page: Target, id?: strin
   const followUps = dueFollowUps(data.applications, today)
   const stats = computeStats(data.applications)
   const hasApiKey = Boolean(loadSettings().apiKey)
+  const waiting = data.applications.filter((app) => ACTIVE_STATUSES.includes(app.status)).length
 
   async function updateFollowUp(app: Application, followUpDate: string | null) {
     await db.applications.put({ ...app, followUpDate, updatedAt: new Date().toISOString() })
@@ -48,12 +49,12 @@ export function HomePage({ onNavigate }: { onNavigate: (page: Target, id?: strin
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Prehľad</h1>
+      <PageHeader title="Prehľad" lead={summary(followUps.length, waiting, data.applications.length)} />
 
       {data.isDemo && (
-        <p className="rounded-md bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:bg-blue-950 dark:text-blue-200">
+        <p className="rounded-2xl bg-applied px-4 py-3 text-sm text-applied-ink">
           Prezeráš ukážkové dáta s vymyslenou osobou. Keď budeš chcieť začať naostro, vymaž ich v{' '}
-          <button type="button" onClick={() => onNavigate('settings')} className="underline">
+          <button type="button" onClick={() => onNavigate('settings')} className="font-semibold underline">
             Nastaveniach
           </button>
           .
@@ -61,103 +62,157 @@ export function HomePage({ onNavigate }: { onNavigate: (page: Target, id?: strin
       )}
 
       {steps.some((step) => !step.done) && (
-        <Section title="Vitaj v JobFit">
-          <p className="mb-4 text-sm text-slate-700 dark:text-slate-300">
-            JobFit porovná tvoje CV s pracovným inzerátom, ukáže zhodu a chýbajúce zručnosti a pomôže ti sledovať
-            žiadosti. Všetky dáta zostávajú v tvojom prehliadači a CV sa pred odoslaním do AI anonymizuje.
-          </p>
-          <ol className="space-y-2">
+        <section className="grid gap-6 rounded-3xl bg-accent-soft p-6 text-interview-ink sm:p-8 md:grid-cols-[1.2fr_1fr]">
+          <div>
+            <h2 className="text-2xl font-bold">Vitaj v JobFit</h2>
+            <p className="mt-3 max-w-prose">
+              Porovná tvoje CV s pracovným inzerátom, ukáže zhodu a chýbajúce zručnosti a pomôže ti sledovať
+              žiadosti. Všetky dáta zostávajú v tvojom prehliadači a CV sa pred odoslaním do AI anonymizuje.
+            </p>
+            {isEmpty && (
+              <div className="mt-5">
+                <button type="button" onClick={handleDemo} className={primaryButton}>
+                  Vyskúšať s ukážkovými dátami
+                </button>
+                <p className="mt-2 text-sm opacity-80">Bez API kľúča a vlastného CV.</p>
+              </div>
+            )}
+          </div>
+          {/* A real sequence, so numbered steps. */}
+          <ol className="space-y-2 self-center">
             {steps.map((step, index) => (
-              <li key={step.text} className="flex items-center gap-2 text-sm">
-                <span aria-hidden className={step.done ? 'text-green-700 dark:text-green-400' : 'text-slate-400'}>
-                  {step.done ? '✓' : `${index + 1}.`}
-                </span>
-                {step.done ? (
-                  <span className="text-slate-500 dark:text-slate-400 line-through">{step.text}</span>
-                ) : (
-                  <button type="button" onClick={() => onNavigate(step.target)} className="underline">
-                    {step.text}
-                  </button>
-                )}
+              <li key={step.text}>
+                <button
+                  type="button"
+                  onClick={() => onNavigate(step.target)}
+                  disabled={step.done}
+                  className="flex w-full items-center gap-3 rounded-2xl bg-surface/70 px-4 py-3 text-left font-semibold transition-colors enabled:hover:bg-surface disabled:opacity-60"
+                >
+                  <span
+                    className={`grid size-8 shrink-0 place-items-center rounded-full text-sm ${
+                      step.done ? 'bg-offer text-offer-ink' : 'bg-accent text-on-accent'
+                    }`}
+                  >
+                    {step.done ? '✓' : index + 1}
+                  </span>
+                  <span className={step.done ? 'line-through' : ''}>{step.text}</span>
+                </button>
               </li>
             ))}
           </ol>
-          {isEmpty && (
-            <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-800">
-              <p className={`${hintClass} mb-2`}>Chceš si appku najprv pozrieť bez API kľúča a vlastného CV?</p>
-              <button type="button" onClick={handleDemo} className={secondaryButton}>
-                Vyskúšať s ukážkovými dátami
-              </button>
-            </div>
+        </section>
+      )}
+
+      {data.applications.length > 0 && <Pipeline applications={data.applications} onOpen={() => onNavigate('applications')} />}
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+        <Section title="Čas na follow-up">
+          {followUps.length === 0 ? (
+            <EmptyState title="Teraz sa netreba nikomu ozývať">
+              Keď žiadosť označíš ako poslanú, appka ti o {FOLLOW_UP_DAYS} dní pripomenie, že je čas ozvať sa firme.
+            </EmptyState>
+          ) : (
+            <ul className="space-y-3">
+              {followUps.map((app) => (
+                <li key={app.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-peach/60 p-4">
+                  <button type="button" onClick={() => onNavigate('applications', app.id)} className="text-left">
+                    <span className="block font-semibold hover:underline">
+                      {app.company}, {app.position}
+                    </span>
+                    <span className="text-sm text-peach-ink">
+                      {STATUS_LABELS[app.status]}, follow-up {formatDate(app.followUpDate)}
+                    </span>
+                  </button>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => updateFollowUp(app, null)} className={primaryButton}>
+                      Hotovo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateFollowUp(app, addDays(today, FOLLOW_UP_DAYS))}
+                      className={secondaryButton}
+                    >
+                      Odložiť o týždeň
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
         </Section>
-      )}
 
-      <Section title="Čas na follow-up">
-        {followUps.length === 0 ? (
-          <p className={hintClass}>
-            Teraz sa netreba nikomu ozývať. Keď žiadosť označíš ako poslanú, appka ti o {FOLLOW_UP_DAYS} dní
-            pripomenie, že je čas ozvať sa firme.
-          </p>
-        ) : (
-          <ul className="divide-y divide-slate-200 dark:divide-slate-800">
-            {followUps.map((app) => (
-              <li key={app.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                <button type="button" onClick={() => onNavigate('applications', app.id)} className="text-left">
-                  <span className="block font-medium hover:underline">
-                    {app.company} – {app.position}
-                  </span>
-                  <span className={hintClass}>
-                    {STATUS_LABELS[app.status]} · follow-up {formatDate(app.followUpDate)}
-                  </span>
-                </button>
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => updateFollowUp(app, null)} className={secondaryButton}>
-                    Hotovo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => updateFollowUp(app, addDays(today, FOLLOW_UP_DAYS))}
-                    className={secondaryButton}
-                  >
-                    Odložiť o týždeň
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      <section aria-label="Štatistiky" className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Žiadosti" value={String(stats.total)} detail={`${stats.sent} poslaných`} />
-        <Stat
-          label="Miera odpovede"
-          value={stats.responseRate === null ? '–' : `${stats.responseRate} %`}
-          detail={stats.sent === 0 ? 'zatiaľ nič poslané' : `${stats.responded} z ${stats.sent} poslaných`}
-        />
-        <Stat
-          label="Priemerný čas do odpovede"
-          value={stats.averageDaysToResponse === null ? '–' : `${stats.averageDaysToResponse.toLocaleString('sk')} d`}
-          detail="od odoslania po odpoveď"
-        />
-      </section>
-
-      {data.applications.length > 0 && (
-        <button type="button" onClick={() => onNavigate('applications')} className={secondaryButton}>
-          Všetky žiadosti
-        </button>
-      )}
+        <section aria-label="Štatistiky" className="rounded-3xl bg-surface p-5 ring-1 ring-line sm:p-7">
+          <dl className="space-y-6">
+            <Stat
+              label="Miera odpovede"
+              value={stats.responseRate === null ? '–' : `${stats.responseRate} %`}
+              detail={stats.sent === 0 ? 'Zatiaľ nič poslané.' : `Odpovedalo ${stats.responded} z ${stats.sent} firiem.`}
+            />
+            <Stat
+              label="Priemerný čas do odpovede"
+              value={
+                stats.averageDaysToResponse === null ? '–' : `${stats.averageDaysToResponse.toLocaleString('sk')} dní`
+              }
+              detail="Od odoslania po prvú odpoveď."
+            />
+            <Stat label="Žiadosti spolu" value={String(stats.total)} detail={`${stats.sent} z nich poslaných.`} />
+          </dl>
+          {data.applications.length > 0 && (
+            <button type="button" onClick={() => onNavigate('applications')} className={`${linkClass} mt-6 text-sm`}>
+              Otvoriť všetky žiadosti
+            </button>
+          )}
+        </section>
+      </div>
     </div>
+  )
+}
+
+/** One sentence about what needs attention, instead of a generic greeting. */
+function summary(due: number, waiting: number, total: number): string {
+  if (total === 0) return 'Zatiaľ tu nie sú žiadne žiadosti. Začni profilom a prvým inzerátom.'
+  const dueText =
+    due === 0 ? 'Dnes netreba nikoho urgovať' : due === 1 ? 'Dnes sa treba ozvať 1 firme' : `Dnes sa treba ozvať ${due} firmám`
+  return `${dueText}. Na ďalší krok čaká ${waiting} z ${total} žiadostí.`
+}
+
+/** Where all applications stand, in the status colours used everywhere else. */
+function Pipeline({ applications, onOpen }: { applications: Application[]; onOpen: () => void }) {
+  const counts = APPLICATION_STATUSES.map((status) => ({
+    status,
+    count: applications.filter((app) => app.status === status).length,
+  }))
+  return (
+    <section aria-label="Stav žiadostí">
+      <button type="button" onClick={onOpen} className="block w-full rounded-full" aria-label="Otvoriť žiadosti">
+        <span className="flex h-3 gap-1 overflow-hidden rounded-full">
+          {counts
+            .filter(({ count }) => count > 0)
+            .map(({ status, count }) => (
+              <span key={status} style={{ flexGrow: count }} className={`basis-0 ${STATUS_BAR[status]}`} />
+            ))}
+        </span>
+      </button>
+      <ul className="mt-3 flex flex-wrap gap-2">
+        {counts.map(({ status, count }) => (
+          <li
+            key={status}
+            className={`rounded-full px-3 py-1 text-sm font-semibold ${count === 0 ? 'bg-sunken text-muted' : STATUS_BADGE[status]}`}
+          >
+            {STATUS_LABELS[status]} {count}
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
 function Stat({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-      <p className={hintClass}>{label}</p>
-      <p className="mt-1 text-3xl font-bold">{value}</p>
-      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{detail}</p>
+    <div>
+      <dt className="text-sm font-semibold text-muted">{label}</dt>
+      <dd className="font-display text-4xl font-bold tracking-tight">{value}</dd>
+      <dd className="text-sm text-muted">{detail}</dd>
     </div>
   )
 }

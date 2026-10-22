@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { scoreColor } from '../components/scoreColor'
+import { scoreChip } from '../components/scoreColor'
 import {
+  EmptyState,
   FeedbackMessage,
+  PageHeader,
   hintClass,
   inputClass,
   labelClass,
@@ -85,23 +87,23 @@ export function PostingsPage(props: PostingsPageProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">Inzeráty</h1>
-        <button type="button" onClick={() => setView({ name: 'new' })} className={primaryButton}>
-          Pridať inzerát
-        </button>
-      </div>
+      <PageHeader
+        title="Inzeráty"
+        lead="Vložené inzeráty a to, ako k nim sedí tvoje CV."
+        actions={
+          <button type="button" onClick={() => setView({ name: 'new' })} className={primaryButton}>
+            Pridať inzerát
+          </button>
+        }
+      />
 
       {postings.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center dark:border-slate-700">
-          <p className="font-medium">Zatiaľ tu nie je žiadny inzerát.</p>
-          <p className={`${hintClass} mt-1`}>
-            Skopíruj text inzerátu z pracovného portálu a vlož ho sem. Aplikácia z neho vytiahne požiadavky a
-            porovná ich s tvojím CV.
-          </p>
-        </div>
+        <EmptyState title="Zatiaľ tu nie je žiadny inzerát">
+          Skopíruj text inzerátu z pracovného portálu a vlož ho sem. Aplikácia z neho vytiahne požiadavky a
+          porovná ich s tvojím CV.
+        </EmptyState>
       ) : (
-        <ul className="space-y-2">
+        <ul className="grid gap-3 md:grid-cols-2">
           {postings.map((posting) => {
             const score =
               profile && posting.requirements ? computeMatch(profile.cv.skills, posting.requirements).score : undefined
@@ -110,17 +112,14 @@ export function PostingsPage(props: PostingsPageProps) {
                 <button
                   type="button"
                   onClick={() => setView({ name: 'detail', id: posting.id })}
-                  className="flex w-full items-center justify-between gap-4 rounded-lg border border-slate-200 p-4 text-left hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900"
+                  className="flex h-full w-full items-center gap-4 rounded-3xl bg-surface p-4 text-left ring-1 ring-line transition hover:ring-accent/40"
                 >
-                  <span>
-                    <span className="block font-medium">{posting.title || 'Inzerát bez názvu'}</span>
-                    <span className={hintClass}>
-                      {posting.company || 'Firma neuvedená'} · {new Date(posting.createdAt).toLocaleDateString('sk')}
-                    </span>
-                  </span>
-                  <span className={`shrink-0 text-xl font-bold ${scoreColor(score ?? null)}`}>
+                  {/* The score tile carries the score colour, so the list can be scanned by fit. */}
+                  <span
+                    className={`grid size-16 shrink-0 place-items-center rounded-2xl font-display text-xl font-bold ${scoreChip(score ?? null)}`}
+                  >
                     {score === undefined ? (
-                      <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+                      <span className="px-1 text-center font-sans text-[11px] leading-tight font-semibold">
                         {posting.requirements ? 'bez profilu' : 'neanalyzovaný'}
                       </span>
                     ) : score === null ? (
@@ -128,6 +127,15 @@ export function PostingsPage(props: PostingsPageProps) {
                     ) : (
                       `${score} %`
                     )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block font-display text-lg leading-snug font-semibold">
+                      {posting.title || 'Inzerát bez názvu'}
+                    </span>
+                    <span className="block text-sm text-muted">{posting.company || 'Firma neuvedená'}</span>
+                    <span className="block text-xs text-muted">
+                      Pridané {new Date(posting.createdAt).toLocaleDateString('sk')}
+                    </span>
                   </span>
                 </button>
               </li>
@@ -168,7 +176,7 @@ function NewPostingForm({ onCancel, onSaved }: { onCancel: () => void; onSaved: 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <h1 className="text-2xl font-bold">Nový inzerát</h1>
+      <PageHeader title="Nový inzerát" lead="Vlož celý text inzerátu. Pozícia, firma a odkaz pomôžu inzerát neskôr nájsť." />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="posting-title" label="Pozícia" value={title} onChange={setTitle} />
         <Field id="posting-company" label="Firma" value={company} onChange={setCompany} />

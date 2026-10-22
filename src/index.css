@@ -1,12 +1,137 @@
 @import 'tailwindcss';
+/* The font is bundled with the app (not loaded from Google Fonts), so the only external request stays Gemini.
+   One family for everything: its optical size axis adapts the letterforms from small text to big headings. */
+@import '@fontsource-variable/bricolage-grotesque';
 
 /* dark: utilities follow a .dark class on <html> (set from the user's theme choice), not only the OS setting. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Clearly visible keyboard focus everywhere; mouse clicks do not show it. */
+/*
+  Design tokens. Components use semantic names (bg-paper, text-muted, bg-applied…) and never raw colors,
+  so light and dark mode switch here in one place instead of a dark: variant on every element.
+
+  Pastels carry meaning: every application status has its own colour, like tabs in a binder,
+  and the same colours mark skills you have (offer/mint) or miss (rejected/rose).
+  Each pastel has an "-ink" partner for text on top of it with sufficient contrast.
+*/
+:root {
+  --paper: #f8f7fd;
+  --surface: #ffffff;
+  --sunken: #f1effa;
+  --line: #e5e2f2;
+  --ink: #221f3f;
+  --muted: #625e88;
+  --accent: #5a4bd1;
+  --accent-hover: #4a3cb8;
+  --accent-soft: #e8e4ff;
+  --on-accent: #ffffff;
+
+  --saved: #fff1bf;
+  --saved-ink: #6b5700;
+  --applied: #dcebff;
+  --applied-ink: #1f4e86;
+  --interview: #e8e4ff;
+  --interview-ink: #4a3cb0;
+  --offer: #d4f2e3;
+  --offer-ink: #1b6a46;
+  --rejected: #ffdce4;
+  --rejected-ink: #962545;
+  --no-response: #e8eaf1;
+  --no-response-ink: #4b5168;
+  --peach: #ffe1cf;
+  --peach-ink: #8a3d10;
+}
+
+:root.dark {
+  --paper: #13112a;
+  --surface: #1b1935;
+  --sunken: #242143;
+  --line: #322e58;
+  --ink: #eceafb;
+  --muted: #aaa6cf;
+  --accent: #a99cff;
+  --accent-hover: #c0b6ff;
+  --accent-soft: #2d2860;
+  --on-accent: #13112a;
+
+  --saved: #3a3317;
+  --saved-ink: #f5e49c;
+  --applied: #1b3150;
+  --applied-ink: #bddcff;
+  --interview: #2d2860;
+  --interview-ink: #d5cdff;
+  --offer: #163b2c;
+  --offer-ink: #b8edd2;
+  --rejected: #47202e;
+  --rejected-ink: #ffc8d3;
+  --no-response: #282b39;
+  --no-response-ink: #cbd0e0;
+  --peach: #43281b;
+  --peach-ink: #ffcfb2;
+}
+
+@theme inline {
+  --font-sans: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+
+  --color-saved: var(--saved);
+  --color-saved-ink: var(--saved-ink);
+  --color-applied: var(--applied);
+  --color-applied-ink: var(--applied-ink);
+  --color-interview: var(--interview);
+  --color-interview-ink: var(--interview-ink);
+  --color-offer: var(--offer);
+  --color-offer-ink: var(--offer-ink);
+  --color-rejected: var(--rejected);
+  --color-rejected-ink: var(--rejected-ink);
+  --color-no-response: var(--no-response);
+  --color-no-response-ink: var(--no-response-ink);
+  --color-peach: var(--peach);
+  --color-peach-ink: var(--peach-ink);
+}
+
 @layer base {
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  h1 {
+    font-variation-settings: 'wdth' 90;
+  }
+
+  /* Clearly visible keyboard focus everywhere; mouse clicks do not show it. */
   :focus-visible {
-    outline: 2px solid var(--color-blue-500);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
   }
 }

@@ -33,14 +33,14 @@ export function TagListEditor(props: {
         {items.map((item) => (
           <li
             key={item}
-            className="flex items-center gap-1 rounded-full bg-slate-100 py-1 pr-1 pl-3 text-sm dark:bg-slate-800"
+            className="flex items-center gap-1 rounded-full bg-accent-soft py-1 pr-1 pl-3 text-sm font-medium text-interview-ink"
           >
             {item}
             <button
               type="button"
               onClick={() => onChange(items.filter((other) => other !== item))}
               aria-label={`Odstrániť ${item}`}
-              className="rounded-full px-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+              className="grid size-6 place-items-center rounded-full opacity-60 transition hover:bg-surface hover:opacity-100"
             >
               ×
             </button>
