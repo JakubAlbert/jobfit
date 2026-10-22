@@ -12,6 +12,7 @@ import {
 import { db, PROFILE_ID } from '../db/db'
 import type { JobPosting, Profile } from '../db/schema'
 import { computeMatch } from '../lib/matchScore'
+import { notifyOnboardingProgress } from '../lib/onboarding'
 import { PostingDetail } from './PostingDetail'
 
 type View = { name: 'list' } | { name: 'new' } | { name: 'detail'; id: string }
@@ -158,6 +159,7 @@ function NewPostingForm({ onCancel, onSaved }: { onCancel: () => void; onSaved: 
     }
     try {
       await db.postings.add(posting)
+      notifyOnboardingProgress()
       onSaved(posting.id)
     } catch {
       setFeedback({ tone: 'error', text: 'Inzerát sa nepodarilo uložiť.' })

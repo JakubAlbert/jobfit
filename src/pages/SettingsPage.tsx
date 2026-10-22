@@ -10,9 +10,11 @@ import {
   Section,
   type Feedback,
 } from '../components/ui'
+import { loadDemoData } from '../data/demoData'
 import { clearAllData, exportData, importData, ImportError } from '../db/backup'
 import { generateStructured, GeminiError } from '../lib/gemini'
 import { clearSettings, DEFAULT_MODEL, loadSettings, saveSettings } from '../lib/settings'
+import { notifyOnboardingProgress } from '../lib/onboarding'
 import { applyTheme, loadTheme, saveTheme, THEMES, type Theme } from '../lib/theme'
 import { connectionTestPrompt, connectionTestSchema } from '../prompts/connectionTest'
 
@@ -37,6 +39,7 @@ export function SettingsPage() {
   function handleSave(event: FormEvent) {
     event.preventDefault()
     const saved = saveSettings({ apiKey, model })
+    notifyOnboardingProgress()
     setKeyFeedback(
       saved
         ? { tone: 'success', text: 'Nastavenia sú uložené v tomto prehliadači.' }
@@ -85,10 +88,22 @@ export function SettingsPage() {
     if (!window.confirm('Import nahradí všetky súčasné dáta obsahom zálohy. Pokračovať?')) return
     try {
       await importData(await file.text())
+      notifyOnboardingProgress()
       setDataFeedback({ tone: 'success', text: 'Dáta zo zálohy sú nahraté.' })
     } catch (error) {
       const text = error instanceof ImportError ? error.message : 'Import zlyhal.'
       setDataFeedback({ tone: 'error', text })
+    }
+  }
+
+  async function handleDemo() {
+    if (!window.confirm('Ukážkové dáta nahradia všetky súčasné dáta (profil, inzeráty, žiadosti). Pokračovať?')) return
+    try {
+      await loadDemoData()
+      notifyOnboardingProgress()
+      setDataFeedback({ tone: 'success', text: 'Ukážkové dáta sú nahraté. Pozri si Prehľad, Inzeráty a Žiadosti.' })
+    } catch {
+      setDataFeedback({ tone: 'error', text: 'Ukážkové dáta sa nepodarilo nahrať.' })
     }
   }
 
@@ -99,6 +114,7 @@ export function SettingsPage() {
     if (!confirmed) return
     await clearAllData()
     clearSettings()
+    notifyOnboardingProgress()
     setApiKey('')
     setModel(DEFAULT_MODEL)
     setKeyFeedback(null)
@@ -222,6 +238,9 @@ export function SettingsPage() {
             onChange={handleImport}
             className="hidden"
           />
+          <button type="button" onClick={handleDemo} className={secondaryButton}>
+            Nahrať ukážkové dáta
+          </button>
           <button type="button" onClick={handleClear} className={dangerButton}>
             Vymazať všetky dáta
           </button>

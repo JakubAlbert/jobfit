@@ -16,6 +16,7 @@ import { anonymize, PLACEHOLDERS, type PersonalDataKind } from '../lib/anonymize
 import { cleanCv, EMPTY_CV, parseCv } from '../lib/cv'
 import { GeminiError } from '../lib/gemini'
 import { extractPdfText, PdfError } from '../lib/pdf'
+import { notifyOnboardingProgress } from '../lib/onboarding'
 import { loadSettings } from '../lib/settings'
 
 const KIND_LABELS: Record<PersonalDataKind, string> = {
@@ -104,6 +105,7 @@ export function ProfilePage({ onOpenSettings }: { onOpenSettings: () => void }) 
         updatedAt: new Date().toISOString(),
       })
       setCv(cleaned)
+      notifyOnboardingProgress()
       setFeedback({ tone: 'success', text: 'Profil je uložený.' })
     } catch {
       setFeedback({ tone: 'error', text: 'Profil sa nepodarilo uložiť.' })

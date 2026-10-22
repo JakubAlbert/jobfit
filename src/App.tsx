@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { NextStepBanner } from './components/NextStepBanner'
 import { db } from './db/db'
 import { ApplicationsPage } from './pages/ApplicationsPage'
 import { HomePage } from './pages/HomePage'
@@ -56,6 +57,9 @@ function App() {
           ))}
         </nav>
       </header>
+
+      {/* Keyed by route so it re-checks progress after each navigation. */}
+      <NextStepBanner key={route.page} page={route.page} onNavigate={go} />
 
       {storageBlocked && (
         <p

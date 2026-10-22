@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { formatDate, STATUS_LABELS } from '../components/statusLabels'
 import { hintClass, secondaryButton, Section } from '../components/ui'
+import { DEMO_PROFILE_TEXT, loadDemoData } from '../data/demoData'
 import { db, PROFILE_ID } from '../db/db'
 import type { Application } from '../db/schema'
 import { addDays, computeStats, dueFollowUps, FOLLOW_UP_DAYS, todayIso } from '../lib/applications'
+import { onboardingSteps } from '../lib/onboarding'
 import { loadSettings } from '../lib/settings'
 
 type Target = 'applications' | 'postings' | 'profile' | 'settings'
@@ -14,7 +16,7 @@ async function loadData() {
     db.profiles.get(PROFILE_ID),
     db.postings.count(),
   ])
-  return { applications, hasProfile: Boolean(profile), postingCount }
+  return { applications, hasProfile: Boolean(profile), isDemo: profile?.rawText === DEMO_PROFILE_TEXT, postingCount }
 }
 
 export function HomePage({ onNavigate }: { onNavigate: (page: Target, id?: string) => void }) {
@@ -36,19 +38,34 @@ export function HomePage({ onNavigate }: { onNavigate: (page: Target, id?: strin
     setData(await loadData())
   }
 
-  // Short checklist until the basics are set up.
-  const steps = [
-    { done: hasApiKey, text: 'Zadaj Gemini API kľúč', target: 'settings' as const },
-    { done: data.hasProfile, text: 'Nahraj svoje CV', target: 'profile' as const },
-    { done: data.postingCount > 0, text: 'Vlož prvý inzerát', target: 'postings' as const },
-  ]
+  async function handleDemo() {
+    await loadDemoData()
+    setData(await loadData())
+  }
+
+  const steps = onboardingSteps({ hasApiKey, hasProfile: data.hasProfile, postingCount: data.postingCount })
+  const isEmpty = !data.hasProfile && data.postingCount === 0 && data.applications.length === 0
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Prehľad</h1>
 
+      {data.isDemo && (
+        <p className="rounded-md bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:bg-blue-950 dark:text-blue-200">
+          Prezeráš ukážkové dáta s vymyslenou osobou. Keď budeš chcieť začať naostro, vymaž ich v{' '}
+          <button type="button" onClick={() => onNavigate('settings')} className="underline">
+            Nastaveniach
+          </button>
+          .
+        </p>
+      )}
+
       {steps.some((step) => !step.done) && (
-        <Section title="Začíname">
+        <Section title="Vitaj v JobFit">
+          <p className="mb-4 text-sm text-slate-700 dark:text-slate-300">
+            JobFit porovná tvoje CV s pracovným inzerátom, ukáže zhodu a chýbajúce zručnosti a pomôže ti sledovať
+            žiadosti. Všetky dáta zostávajú v tvojom prehliadači a CV sa pred odoslaním do AI anonymizuje.
+          </p>
           <ol className="space-y-2">
             {steps.map((step, index) => (
               <li key={step.text} className="flex items-center gap-2 text-sm">
@@ -65,6 +82,14 @@ export function HomePage({ onNavigate }: { onNavigate: (page: Target, id?: strin
               </li>
             ))}
           </ol>
+          {isEmpty && (
+            <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-800">
+              <p className={`${hintClass} mb-2`}>Chceš si appku najprv pozrieť bez API kľúča a vlastného CV?</p>
+              <button type="button" onClick={handleDemo} className={secondaryButton}>
+                Vyskúšať s ukážkovými dátami
+              </button>
+            </div>
+          )}
         </Section>
       )}
 
