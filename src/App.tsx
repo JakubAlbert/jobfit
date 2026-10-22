@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { PostingsPage } from './pages/PostingsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SettingsPage } from './pages/SettingsPage'
 
 // Plain state-based navigation: a few screens do not justify a router dependency yet.
 const PAGES = [
   { id: 'home', label: 'Prehľad' },
+  { id: 'postings', label: 'Inzeráty' },
   { id: 'profile', label: 'Profil' },
   { id: 'settings', label: 'Nastavenia' },
 ] as const
@@ -42,6 +44,9 @@ function App() {
               žiadostí. Začni zadaním API kľúča v Nastaveniach.
             </p>
           </div>
+        )}
+        {page === 'postings' && (
+          <PostingsPage onOpenProfile={() => setPage('profile')} onOpenSettings={() => setPage('settings')} />
         )}
         {page === 'profile' && <ProfilePage onOpenSettings={() => setPage('settings')} />}
         {page === 'settings' && <SettingsPage />}
