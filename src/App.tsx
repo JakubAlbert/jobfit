@@ -1,4 +1,4 @@
-import { useEffect, useState, type ComponentType, type SVGProps } from 'react'
+import { lazy, Suspense, useEffect, useState, type ComponentType, type SVGProps } from 'react'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { BoardIcon, HomeIcon, LogoMark, PostingIcon, ProfileIcon, SettingsIcon } from './components/icons'
 import { NextStepBanner } from './components/NextStepBanner'
@@ -7,11 +7,14 @@ import { db } from './db/db'
 import { currentRoute, navigate, type PageId, type Route } from './lib/router'
 import { loadCustomSynonyms } from './lib/synonyms'
 import { followSystemTheme } from './lib/theme'
-import { ApplicationsPage } from './pages/ApplicationsPage'
 import { HomePage } from './pages/HomePage'
-import { PostingsPage } from './pages/PostingsPage'
-import { ProfilePage } from './pages/ProfilePage'
-import { SettingsPage } from './pages/SettingsPage'
+
+// The overview loads with the app; other screens are separate chunks loaded on first visit,
+// which keeps the first page load small as features grow.
+const ApplicationsPage = lazy(() => import('./pages/ApplicationsPage').then((m) => ({ default: m.ApplicationsPage })))
+const PostingsPage = lazy(() => import('./pages/PostingsPage').then((m) => ({ default: m.PostingsPage })))
+const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })))
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })))
 
 /** The main sections. Settings is reached from the gear icon, so it does not compete with them. */
 const MAIN_PAGES: { id: PageId; label: string; icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
@@ -109,6 +112,7 @@ function App() {
           It also resets the error boundary, so an error on one page does not block the others. */}
       <main key={`${route.page}:${route.id ?? ''}`} className="mx-auto w-full max-w-6xl flex-1 px-4 pt-8 pb-12 md:pt-12 md:pb-16">
         <ErrorBoundary>
+          <Suspense fallback={<p className="text-sm text-muted">Načítavam…</p>}>
           {ready && route.page === 'home' && <HomePage onNavigate={go} />}
           {ready && route.page === 'applications' && (
             <ApplicationsPage
@@ -128,6 +132,7 @@ function App() {
           )}
           {ready && route.page === 'profile' && <ProfilePage onOpenSettings={() => go('settings')} />}
           {ready && route.page === 'settings' && <SettingsPage />}
+          </Suspense>
         </ErrorBoundary>
       </main>
 
