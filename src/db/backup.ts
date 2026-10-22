@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { db as defaultDb, type JobFitDb } from './db'
-import { AnalysisSchema, ApplicationSchema, JobPostingSchema, ProfileSchema } from './schema'
+import { AnalysisSchema, ApplicationSchema, JobPostingSchema, ProfileSchema, SkillSynonymSchema } from './schema'
 
 export const BACKUP_FORMAT = 'jobfit-backup'
 export const BACKUP_VERSION = 1
@@ -16,6 +16,8 @@ export const BackupSchema = z.object({
     postings: z.array(JobPostingSchema),
     analyses: z.array(AnalysisSchema),
     applications: z.array(ApplicationSchema),
+    // Added later; the default keeps older backups importable.
+    synonyms: z.array(SkillSynonymSchema).default([]),
   }),
 })
 
@@ -30,17 +32,18 @@ export class ImportError extends Error {
 }
 
 export async function exportData(database: JobFitDb = defaultDb): Promise<Backup> {
-  const [profiles, postings, analyses, applications] = await Promise.all([
+  const [profiles, postings, analyses, applications, synonyms] = await Promise.all([
     database.profiles.toArray(),
     database.postings.toArray(),
     database.analyses.toArray(),
     database.applications.toArray(),
+    database.synonyms.toArray(),
   ])
   return {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
-    data: { profiles, postings, analyses, applications },
+    data: { profiles, postings, analyses, applications, synonyms },
   }
 }
 
@@ -62,14 +65,15 @@ export async function importData(json: string, database: JobFitDb = defaultDb): 
     throw new ImportError(describeBackupError(parsed))
   }
 
-  const { profiles, postings, analyses, applications } = result.data.data
-  const tables = [database.profiles, database.postings, database.analyses, database.applications]
+  const { profiles, postings, analyses, applications, synonyms } = result.data.data
+  const tables = [database.profiles, database.postings, database.analyses, database.applications, database.synonyms]
   await database.transaction('rw', tables, async () => {
     await Promise.all(tables.map((table) => table.clear()))
     await database.profiles.bulkAdd(profiles)
     await database.postings.bulkAdd(postings)
     await database.analyses.bulkAdd(analyses)
     await database.applications.bulkAdd(applications)
+    await database.synonyms.bulkAdd(synonyms)
   })
 }
 

@@ -11,11 +11,13 @@ import {
   Section,
   type Feedback,
 } from '../components/ui'
+import { SynonymsSection } from '../components/SynonymsSection'
 import { loadDemoData } from '../data/demoData'
 import { clearAllData, exportData, importData, ImportError } from '../db/backup'
 import { generateStructured, GeminiError } from '../lib/gemini'
 import { clearSettings, DEFAULT_MODEL, loadSettings, saveSettings } from '../lib/settings'
 import { notifyOnboardingProgress } from '../lib/onboarding'
+import { loadCustomSynonyms } from '../lib/synonyms'
 import { connectionTestPrompt, connectionTestSchema } from '../prompts/connectionTest'
 
 
@@ -26,6 +28,15 @@ export function SettingsPage() {
   const [keyFeedback, setKeyFeedback] = useState<Feedback>(null)
   const [testing, setTesting] = useState(false)
   const [dataFeedback, setDataFeedback] = useState<Feedback>(null)
+  // Bumped after the data is replaced, so the synonyms section reloads its list.
+  const [dataVersion, setDataVersion] = useState(0)
+
+  // After import, demo data or clearing, the matcher must pick up the new synonyms too.
+  async function afterDataReplaced() {
+    await loadCustomSynonyms()
+    setDataVersion((version) => version + 1)
+    notifyOnboardingProgress()
+  }
   const fileInput = useRef<HTMLInputElement>(null)
 
   function handleSave(event: FormEvent) {
@@ -80,7 +91,7 @@ export function SettingsPage() {
     if (!window.confirm('Import nahradí všetky súčasné dáta obsahom zálohy. Pokračovať?')) return
     try {
       await importData(await file.text())
-      notifyOnboardingProgress()
+      await afterDataReplaced()
       setDataFeedback({ tone: 'success', text: 'Dáta zo zálohy sú nahraté.' })
     } catch (error) {
       const text = error instanceof ImportError ? error.message : 'Import zlyhal.'
@@ -92,7 +103,7 @@ export function SettingsPage() {
     if (!window.confirm('Ukážkové dáta nahradia všetky súčasné dáta (profil, inzeráty, žiadosti). Pokračovať?')) return
     try {
       await loadDemoData()
-      notifyOnboardingProgress()
+      await afterDataReplaced()
       setDataFeedback({ tone: 'success', text: 'Ukážkové dáta sú nahraté. Pozri si Prehľad, Inzeráty a Žiadosti.' })
     } catch {
       setDataFeedback({ tone: 'error', text: 'Ukážkové dáta sa nepodarilo nahrať.' })
@@ -106,7 +117,7 @@ export function SettingsPage() {
     if (!confirmed) return
     await clearAllData()
     clearSettings()
-    notifyOnboardingProgress()
+    await afterDataReplaced()
     setApiKey('')
     setModel(DEFAULT_MODEL)
     setKeyFeedback(null)
@@ -181,6 +192,8 @@ export function SettingsPage() {
           <FeedbackMessage feedback={keyFeedback} />
         </form>
       </Section>
+
+      <SynonymsSection key={dataVersion} />
 
       <Section title="Súkromie">
         <p className="max-w-prose text-sm leading-relaxed">

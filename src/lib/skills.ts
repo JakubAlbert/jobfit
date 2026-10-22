@@ -21,10 +21,26 @@ export function normalizeSkill(skill: string): string {
 }
 
 // Normalized alias (and canonical name) → canonical name.
-const ALIASES = new Map<string, string>()
-for (const [canonical, aliases] of Object.entries(SKILL_SYNONYMS)) {
-  for (const name of [canonical, ...aliases]) ALIASES.set(normalizeSkill(name), canonical)
+function buildAliases(entries: Iterable<[string, string[]]>): Map<string, string> {
+  const aliases = new Map<string, string>()
+  for (const [canonical, names] of entries) {
+    for (const name of [canonical, ...names]) aliases.set(normalizeSkill(name), canonical)
+  }
+  return aliases
 }
+
+const BUILT_IN = buildAliases(Object.entries(SKILL_SYNONYMS))
+
+// The user's own synonyms (from the database), checked before the built-in dictionary.
+// Module state on purpose: matching runs in many places (lists, tracker, detail) and threading the
+// list through all of them would add a parameter everywhere for something that changes rarely.
+let custom = new Map<string, string>()
+
+export function setCustomSynonyms(synonyms: { canonical: string; aliases: string[] }[]): void {
+  custom = buildAliases(synonyms.map(({ canonical, aliases }) => [canonical, aliases]))
+}
+
+const lookup = (key: string) => custom.get(key) ?? BUILT_IN.get(key)
 
 // "react 18", "python 3.12", "java 17+", "angular v16"
 const TRAILING_VERSION = /\s+v?\d+(?:\.\d+)*\+?$/
@@ -32,7 +48,7 @@ const TRAILING_VERSION = /\s+v?\d+(?:\.\d+)*\+?$/
 export function canonicalSkill(skill: string): CanonicalSkill {
   const normalized = normalizeSkill(skill)
   // The full text first, so names that end in a number ("Office 365") are not cut.
-  const canonical = ALIASES.get(normalized) ?? ALIASES.get(normalized.replace(TRAILING_VERSION, ''))
+  const canonical = lookup(normalized) ?? lookup(normalized.replace(TRAILING_VERSION, ''))
   if (canonical) return { key: normalizeSkill(canonical), label: canonical }
   return { key: normalized.replace(TRAILING_VERSION, ''), label: skill.trim() }
 }

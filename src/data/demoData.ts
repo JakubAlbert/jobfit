@@ -225,6 +225,7 @@ export function buildDemoBackup(today: string, now: Date = new Date()): Backup {
           createdAt: timestamp,
         },
       ],
+      synonyms: [],
       applications: [
         application({
           id: 'demo-app-frontend',

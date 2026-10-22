@@ -167,6 +167,16 @@ export const ApplicationSchema = z.object({
   updatedAt: timestamp,
 })
 
+// --- User's own skill synonyms, on top of the built-in dictionary ---
+
+export const SkillSynonymSchema = z.object({
+  id,
+  /** The name skills are shown and matched under, e.g. "SQL Server". */
+  canonical: z.string().min(1),
+  /** Other ways of writing it, e.g. ["MS SQL", "MSSQL"]. */
+  aliases: z.array(z.string()),
+})
+
 // --- AI response cache (not exported: it can always be rebuilt) ---
 
 export const AiCacheEntrySchema = z.object({
@@ -194,3 +204,4 @@ export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number]
 export type StatusChange = z.infer<typeof StatusChangeSchema>
 export type Application = z.infer<typeof ApplicationSchema>
 export type AiCacheEntry = z.infer<typeof AiCacheEntrySchema>
+export type SkillSynonym = z.infer<typeof SkillSynonymSchema>

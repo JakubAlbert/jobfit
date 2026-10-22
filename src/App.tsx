@@ -5,6 +5,7 @@ import { NextStepBanner } from './components/NextStepBanner'
 import { ThemeSwitch } from './components/ThemeSwitch'
 import { db } from './db/db'
 import { currentRoute, navigate, type PageId, type Route } from './lib/router'
+import { loadCustomSynonyms } from './lib/synonyms'
 import { followSystemTheme } from './lib/theme'
 import { ApplicationsPage } from './pages/ApplicationsPage'
 import { HomePage } from './pages/HomePage'
@@ -37,12 +38,17 @@ function App() {
   }, [])
 
   const [storageBlocked, setStorageBlocked] = useState(false)
+  // Pages wait for the user's skill synonyms, so the first scores they show already use them.
+  const [ready, setReady] = useState(false)
 
   useEffect(followSystemTheme, [])
 
   // Some private browsing modes block IndexedDB; say so instead of failing silently later.
   useEffect(() => {
-    db.open().catch(() => setStorageBlocked(true))
+    db.open()
+      .then(() => loadCustomSynonyms())
+      .catch(() => setStorageBlocked(true))
+      .finally(() => setReady(true))
   }, [])
 
   // A column as tall as the window in which main grows, so the footer sits at the bottom even on short pages.
@@ -103,15 +109,15 @@ function App() {
           It also resets the error boundary, so an error on one page does not block the others. */}
       <main key={`${route.page}:${route.id ?? ''}`} className="mx-auto w-full max-w-6xl flex-1 px-4 pt-8 pb-12 md:pt-12 md:pb-16">
         <ErrorBoundary>
-          {route.page === 'home' && <HomePage onNavigate={go} />}
-          {route.page === 'applications' && (
+          {ready && route.page === 'home' && <HomePage onNavigate={go} />}
+          {ready && route.page === 'applications' && (
             <ApplicationsPage
               id={route.id}
               onNavigate={(id, options) => go('applications', id, options)}
               onOpenPosting={(id) => go('postings', id)}
             />
           )}
-          {route.page === 'postings' && (
+          {ready && route.page === 'postings' && (
             <PostingsPage
               id={route.id}
               onNavigate={(id, options) => go('postings', id, options)}
@@ -120,8 +126,8 @@ function App() {
               onOpenApplication={(id) => go('applications', id)}
             />
           )}
-          {route.page === 'profile' && <ProfilePage onOpenSettings={() => go('settings')} />}
-          {route.page === 'settings' && <SettingsPage />}
+          {ready && route.page === 'profile' && <ProfilePage onOpenSettings={() => go('settings')} />}
+          {ready && route.page === 'settings' && <SettingsPage />}
         </ErrorBoundary>
       </main>
 

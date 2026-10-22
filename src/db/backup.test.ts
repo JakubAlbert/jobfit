@@ -91,6 +91,19 @@ describe('exportData / importData', () => {
     expect(await db.applications.toArray()).toEqual([{ ...oldApplication, history: [], interviewAt: null }])
   })
 
+  it('round-trips custom synonyms and imports older backups without them', async () => {
+    await db.synonyms.add({ id: 's1', canonical: 'SQL Server', aliases: ['MSSQL'] })
+    const backup = await exportData(db)
+    expect(backup.data.synonyms).toHaveLength(1)
+
+    const { synonyms: _synonyms, ...oldData } = backup.data
+    await importData(JSON.stringify({ ...backup, data: oldData }), db)
+    expect(await db.synonyms.count()).toBe(0)
+
+    await importData(JSON.stringify(backup), db)
+    expect(await db.synonyms.toArray()).toEqual(backup.data.synonyms)
+  })
+
   it('does not export the AI cache', async () => {
     await db.aiCache.add({ hash: 'abc', value: { any: 'thing' }, createdAt: NOW })
 

@@ -1,5 +1,5 @@
 import { Dexie, type EntityTable } from 'dexie'
-import type { AiCacheEntry, Analysis, Application, JobPosting, Profile } from './schema'
+import type { AiCacheEntry, Analysis, Application, JobPosting, Profile, SkillSynonym } from './schema'
 
 export class JobFitDb extends Dexie {
   profiles!: EntityTable<Profile, 'id'>
@@ -7,6 +7,7 @@ export class JobFitDb extends Dexie {
   analyses!: EntityTable<Analysis, 'id'>
   applications!: EntityTable<Application, 'id'>
   aiCache!: EntityTable<AiCacheEntry, 'hash'>
+  synonyms!: EntityTable<SkillSynonym, 'id'>
 
   // The name is a parameter so tests can use an isolated database each.
   constructor(name = 'jobfit') {
@@ -20,6 +21,8 @@ export class JobFitDb extends Dexie {
       applications: 'id, status, followUpDate, postingId',
       aiCache: 'hash',
     })
+    // Version 2 adds the user's own skill synonyms. Existing tables are unchanged, so no data migration.
+    this.version(2).stores({ synonyms: 'id' })
   }
 }
 
