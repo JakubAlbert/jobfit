@@ -89,7 +89,7 @@ function KanbanCard(props: {
         <span className="flex items-start justify-between gap-2">
           <span className="font-medium">{app.company || 'Bez firmy'}</span>
           {score !== undefined && (
-            <span className={`text-sm font-semibold ${scoreColor(score)}`}>{score === null ? '–' : `${score} %`}</span>
+            <span className={`text-sm font-semibold whitespace-nowrap ${scoreColor(score)}`}>{score === null ? '–' : `${score} %`}</span>
           )}
         </span>
         <span className="block text-sm text-slate-600 dark:text-slate-400">{app.position}</span>
