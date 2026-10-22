@@ -24,3 +24,6 @@ export class JobFitDb extends Dexie {
 }
 
 export const db = new JobFitDb()
+
+/** The app keeps a single profile under this id. */
+export const PROFILE_ID = 'me'

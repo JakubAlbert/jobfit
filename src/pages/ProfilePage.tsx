@@ -10,16 +10,13 @@ import {
   Section,
   type Feedback,
 } from '../components/ui'
-import { db } from '../db/db'
+import { db, PROFILE_ID } from '../db/db'
 import type { CvData } from '../db/schema'
 import { anonymize, PLACEHOLDERS, type PersonalDataKind } from '../lib/anonymize'
 import { cleanCv, EMPTY_CV, parseCv } from '../lib/cv'
 import { GeminiError } from '../lib/gemini'
 import { extractPdfText, PdfError } from '../lib/pdf'
 import { loadSettings } from '../lib/settings'
-
-/** The app keeps a single profile. */
-export const PROFILE_ID = 'me'
 
 const KIND_LABELS: Record<PersonalDataKind, string> = {
   email: 'e-mail',
