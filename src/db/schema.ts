@@ -42,6 +42,8 @@ export const CvDataSchema = z.object({
 
 export const ProfileSchema = z.object({
   id,
+  /** Shown when there are several CV versions; the default keeps older backups importable. */
+  name: z.string().default('Hlavné CV'),
   /** Original CV text. Stays local; only an anonymized copy is ever sent to the API. */
   rawText: z.string(),
   // Entered by the user so anonymization can replace them; never sent to the API.
@@ -75,6 +77,8 @@ export const JobPostingSchema = z.object({
   text: z.string(),
   /** Null until the posting has been analyzed. */
   requirements: JobRequirementsSchema.nullable(),
+  /** CV version to compare with; null means the main CV. */
+  profileId: id.nullable().default(null),
   createdAt: timestamp,
 })
 

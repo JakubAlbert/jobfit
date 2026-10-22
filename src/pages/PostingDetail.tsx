@@ -19,12 +19,13 @@ import { newApplication } from '../lib/applications'
 import { GeminiError } from '../lib/gemini'
 import { compareLanguages, computeMatch, type MatchResult } from '../lib/matchScore'
 import { analyzePosting, generateCoverLetter, generateInsights, generateInterviewPrep } from '../lib/posting'
+import { profileForPosting } from '../lib/profiles'
 import { loadSettings } from '../lib/settings'
 import { PostingForm, type PostingFields } from './PostingForm'
 
 interface PostingDetailProps {
   posting: JobPosting
-  profile: Profile | null
+  profiles: Profile[]
   onBack: () => void
   onChanged: () => void
   onOpenProfile: () => void
@@ -33,7 +34,7 @@ interface PostingDetailProps {
 }
 
 export function PostingDetail(props: PostingDetailProps) {
-  const { profile, onBack, onChanged, onOpenProfile, onOpenSettings, onOpenApplication } = props
+  const { profiles, onBack, onChanged, onOpenProfile, onOpenSettings, onOpenApplication } = props
   const [posting, setPosting] = useState(props.posting)
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [busy, setBusy] = useState<'posting' | 'insights' | 'prep' | 'letter' | null>(null)
@@ -52,6 +53,9 @@ export function PostingDetail(props: PostingDetailProps) {
       .first()
       .then((application) => setApplicationId(application?.id ?? null))
   }, [posting.id])
+
+  // The CV version chosen for this posting, or the main CV.
+  const profile = profileForPosting(profiles, posting)
 
   // Always computed from the current profile and requirements: free, instant and never stale.
   const match = useMemo(
@@ -91,7 +95,7 @@ export function PostingDetail(props: PostingDetailProps) {
     const updated: Analysis = {
       id: posting.id,
       postingId: posting.id,
-      profileId: PROFILE_ID,
+      profileId: profile?.id ?? PROFILE_ID,
       insights: null,
       coverLetter: null,
       interviewPrep: null,
@@ -274,7 +278,27 @@ export function PostingDetail(props: PostingDetailProps) {
         </Section>
       ) : (
         <>
-          <Section title="Zhoda s tvojím CV">
+          <Section
+            title="Zhoda s tvojím CV"
+            aside={
+              profiles.length > 1 && (
+                <label className="flex items-center gap-2 text-sm">
+                  <span className="text-muted">Porovnať s</span>
+                  <select
+                    value={profile?.id ?? PROFILE_ID}
+                    onChange={(e) => savePosting({ profileId: e.target.value === PROFILE_ID ? null : e.target.value })}
+                    className={`${inputClass} w-auto py-1.5`}
+                  >
+                    {profiles.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )
+            }
+          >
             {match ? (
               <ScoreCard match={match} />
             ) : (

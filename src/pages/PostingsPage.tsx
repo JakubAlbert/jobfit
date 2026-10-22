@@ -1,26 +1,27 @@
 import { useCallback, useEffect, useState } from 'react'
 import { scoreChip } from '../components/scoreColor'
 import { EmptyState, hintClass, PageHeader, primaryButton } from '../components/ui'
-import { db, PROFILE_ID } from '../db/db'
+import { db } from '../db/db'
 import type { JobPosting, Profile } from '../db/schema'
 import { computeMatch } from '../lib/matchScore'
 import { notifyOnboardingProgress } from '../lib/onboarding'
 import { NEW_ID } from '../lib/router'
+import { profileForPosting } from '../lib/profiles'
 import { fillSeniorityFromTitle } from '../lib/seniority'
 import { PostingDetail } from './PostingDetail'
 import { PostingForm, type PostingFields } from './PostingForm'
 
 
 async function loadData() {
-  const [postings, profile] = await Promise.all([
+  const [postings, profiles] = await Promise.all([
     db.postings.orderBy('createdAt').reverse().toArray(),
-    db.profiles.get(PROFILE_ID),
+    db.profiles.toArray(),
   ])
   // One-off repair of postings analysed before the title was used for seniority.
   const repaired = postings.map(fillSeniorityFromTitle).filter((posting) => posting !== null)
   if (repaired.length > 0) await db.postings.bulkPut(repaired)
   const fixed = postings.map((posting) => repaired.find((r) => r.id === posting.id) ?? posting)
-  return { postings: fixed, profile: profile ?? null }
+  return { postings: fixed, profiles }
 }
 
 interface PostingsPageProps {
@@ -35,13 +36,13 @@ interface PostingsPageProps {
 export function PostingsPage(props: PostingsPageProps) {
   const { id, onNavigate } = props
   const [postings, setPostings] = useState<JobPosting[] | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const [profiles, setProfiles] = useState<Profile[]>([])
 
   const reload = useCallback(
     () =>
       loadData().then((data) => {
         setPostings(data.postings)
-        setProfile(data.profile)
+        setProfiles(data.profiles)
       }),
     [],
   )
@@ -69,7 +70,7 @@ export function PostingsPage(props: PostingsPageProps) {
         <PostingDetail
           key={posting.id}
           posting={posting}
-          profile={profile}
+          profiles={profiles}
           onBack={() => onNavigate()}
           onChanged={reload}
           onOpenProfile={props.onOpenProfile}
@@ -100,6 +101,7 @@ export function PostingsPage(props: PostingsPageProps) {
       ) : (
         <ul className="grid gap-3 md:grid-cols-2">
           {postings.map((posting) => {
+            const profile = profileForPosting(profiles, posting)
             const score =
               profile && posting.requirements ? computeMatch(profile.cv.skills, posting.requirements).score : undefined
             return (
@@ -144,7 +146,13 @@ export function PostingsPage(props: PostingsPageProps) {
 
 function NewPostingForm({ onCancel, onSaved }: { onCancel: () => void; onSaved: (id: string) => void }) {
   async function handleSubmit(fields: PostingFields) {
-    const posting: JobPosting = { id: crypto.randomUUID(), ...fields, requirements: null, createdAt: new Date().toISOString() }
+    const posting: JobPosting = {
+      id: crypto.randomUUID(),
+      ...fields,
+      requirements: null,
+      profileId: null,
+      createdAt: new Date().toISOString(),
+    }
     await db.postings.add(posting)
     notifyOnboardingProgress()
     onSaved(posting.id)

@@ -40,6 +40,7 @@ export function buildDemoBackup(today: string, now: Date = new Date()): Backup {
         'Výhodou: Next.js, Jest, Docker.',
         'Hybridná práca, Bratislava. Mzda od 2 400 € brutto.',
       ].join('\n'),
+      profileId: null,
       requirements: requirements({
         mustHaveSkills: ['React', 'TypeScript', 'REST API'],
         niceToHaveSkills: ['Next.js', 'Jest', 'Docker'],
@@ -62,6 +63,7 @@ export function buildDemoBackup(today: string, now: Date = new Date()): Backup {
         'Musíš ovládať JavaScript, Node.js, PostgreSQL a Docker.',
         'Plusom je AWS a GraphQL. Práca plne na diaľku.',
       ].join('\n'),
+      profileId: null,
       requirements: requirements({
         mustHaveSkills: ['JavaScript', 'Node.js', 'PostgreSQL', 'Docker'],
         niceToHaveSkills: ['AWS', 'GraphQL'],
@@ -80,6 +82,7 @@ export function buildDemoBackup(today: string, now: Date = new Date()): Backup {
         'Do oddelenia reportingu hľadáme dátového analytika.',
         'Požiadavky: SQL, Python, Power BI. Výhodou je pokročilý Excel. Nemčina výhodou.',
       ].join('\n'),
+      profileId: null,
       requirements: requirements({
         mustHaveSkills: ['SQL', 'Python', 'Power BI'],
         niceToHaveSkills: ['Excel'],
@@ -126,6 +129,7 @@ export function buildDemoBackup(today: string, now: Date = new Date()): Backup {
       profiles: [
         {
           id: 'me',
+          name: 'Hlavné CV',
           rawText: DEMO_PROFILE_TEXT,
           fullName: '',
           address: '',

@@ -38,6 +38,7 @@ describe('fillSeniorityFromTitle', () => {
     url: '',
     text: '',
     createdAt: '2026-10-22T10:00:00.000Z',
+    profileId: null,
     requirements:
       seniority === null
         ? null

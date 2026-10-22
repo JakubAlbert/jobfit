@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ApplicationTable } from '../components/ApplicationTable'
 import { KanbanBoard } from '../components/KanbanBoard'
 import { EmptyState, hintClass, PageHeader, primaryButton } from '../components/ui'
-import { db, PROFILE_ID } from '../db/db'
+import { db } from '../db/db'
 import type { Application, ApplicationStatus, JobPosting, Profile } from '../db/schema'
 import { changeStatus, newApplication, todayIso } from '../lib/applications'
 import { computeMatch } from '../lib/matchScore'
+import { profileForPosting } from '../lib/profiles'
 import { NEW_ID } from '../lib/router'
 import { ApplicationEditor } from './ApplicationEditor'
 
@@ -30,12 +31,12 @@ function saveLayout(layout: Layout) {
 }
 
 async function loadData() {
-  const [applications, postings, profile] = await Promise.all([
+  const [applications, postings, profiles] = await Promise.all([
     db.applications.toArray(),
     db.postings.toArray(),
-    db.profiles.get(PROFILE_ID),
+    db.profiles.toArray(),
   ])
-  return { applications, postings, profile: profile ?? null }
+  return { applications, postings, profiles }
 }
 
 interface ApplicationsPageProps {
@@ -46,7 +47,7 @@ interface ApplicationsPageProps {
 }
 
 export function ApplicationsPage({ id, onNavigate, onOpenPosting }: ApplicationsPageProps) {
-  const [data, setData] = useState<{ applications: Application[]; postings: JobPosting[]; profile: Profile | null } | null>(
+  const [data, setData] = useState<{ applications: Application[]; postings: JobPosting[]; profiles: Profile[] } | null>(
     null,
   )
   const [layout, setLayout] = useState<Layout>(loadLayout)
@@ -60,13 +61,16 @@ export function ApplicationsPage({ id, onNavigate, onOpenPosting }: Applications
     reload()
   }, [reload])
 
-  // Live score per application, from its linked posting and the current profile.
+  // Live score per application, from its linked posting and the CV version chosen for it.
   const scores = useMemo(() => {
     const result = new Map<string, number | null>()
-    if (!data?.profile) return result
+    if (!data) return result
     for (const app of data.applications) {
       const posting = data.postings.find((item) => item.id === app.postingId)
-      if (posting?.requirements) result.set(app.id, computeMatch(data.profile.cv.skills, posting.requirements).score)
+      const profile = posting && profileForPosting(data.profiles, posting)
+      if (posting?.requirements && profile) {
+        result.set(app.id, computeMatch(profile.cv.skills, posting.requirements).score)
+      }
     }
     return result
   }, [data])

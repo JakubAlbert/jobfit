@@ -8,6 +8,7 @@ const NOW = '2026-10-22T10:00:00.000Z'
 
 const profile: Profile = {
   id: 'profile-1',
+  name: 'Hlavné CV',
   rawText: 'CV text',
   fullName: 'Ján Kováč',
   address: 'Hlavná 12, 811 01 Bratislava',
