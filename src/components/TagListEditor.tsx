@@ -33,7 +33,7 @@ export function TagListEditor(props: {
         {items.map((item) => (
           <li
             key={item}
-            className="flex items-center gap-1 rounded-full bg-accent-soft py-1 pr-1 pl-3 text-sm font-medium text-interview-ink"
+            className="flex items-center gap-1 rounded-full bg-accent-soft py-1 pr-1 pl-3 text-sm font-medium text-accent-ink"
           >
             {item}
             <button

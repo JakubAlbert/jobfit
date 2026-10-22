@@ -24,7 +24,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
   render() {
     if (!this.state.failed) return this.props.children
     return (
-      <div role="alert" className="rounded-3xl bg-rejected p-6 text-rejected-ink">
+      <div role="alert" className="rounded-2xl bg-rejected p-6 text-rejected-ink">
         <h1 className="text-xl font-bold">Niečo sa pokazilo</h1>
         <p className="mt-2 text-sm">
           Táto obrazovka narazila na neočakávanú chybu. Tvoje dáta sú uložené v prehliadači a nič sa nestratilo.

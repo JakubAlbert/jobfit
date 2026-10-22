@@ -38,6 +38,7 @@ export function ScoreCard({ match }: { match: MatchResult }) {
 
       {segments.length > 0 && (
         <div>
+          {/* Hovering a segment names the skill; the chips below list them all. */}
           <div className="flex h-4 gap-1" role="img" aria-label={`Zhoda ${match.score ?? 0} %`}>
             {segments.map((segment) => (
               <span
@@ -48,7 +49,6 @@ export function ScoreCard({ match }: { match: MatchResult }) {
               />
             ))}
           </div>
-          <p className="mt-2 text-xs text-muted">Každý dielik je jedna zručnosť, povinné sú dvakrát širšie.</p>
         </div>
       )}
 

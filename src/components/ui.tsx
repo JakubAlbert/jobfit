@@ -7,7 +7,7 @@ export type Feedback = { tone: 'info' | 'success' | 'error'; text: string } | nu
 
 export function Section({ title, children, aside }: { title: string; children: ReactNode; aside?: ReactNode }) {
   return (
-    <section className="rounded-3xl bg-surface p-5 ring-1 ring-line sm:p-7">
+    <section className="rounded-2xl bg-surface p-5 ring-1 ring-line sm:p-7">
       <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-xl font-semibold">{title}</h2>
         {aside}
@@ -50,7 +50,7 @@ export function FeedbackMessage({ feedback }: { feedback: Feedback }) {
 /** Placeholder for an empty list: says what is missing and what to do. */
 export function EmptyState({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="rounded-3xl border-2 border-dashed border-line px-6 py-10 text-center">
+    <div className="rounded-2xl border-2 border-dashed border-line px-6 py-10 text-center">
       <p className="font-display text-lg font-semibold">{title}</p>
       <div className="mx-auto mt-2 max-w-md text-sm text-muted">{children}</div>
     </div>
@@ -58,13 +58,13 @@ export function EmptyState({ title, children }: { title: string; children: React
 }
 
 export const inputClass =
-  'w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-muted/70 transition-colors hover:border-accent/40 focus:border-accent'
+  'w-full rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-muted/70 transition-colors hover:border-accent/40 focus:border-accent'
 export const labelClass = 'block text-sm font-semibold'
 export const hintClass = 'text-sm text-muted'
 export const primaryButton =
-  'inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50'
+  'inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50'
 export const secondaryButton =
-  'inline-flex items-center justify-center gap-2 rounded-xl bg-accent-soft px-4 py-2.5 text-sm font-semibold text-interview-ink transition-colors hover:bg-interview hover:ring-1 hover:ring-accent/30 disabled:cursor-not-allowed disabled:opacity-50'
+  'inline-flex items-center justify-center gap-2 rounded-lg bg-accent-soft px-4 py-2.5 text-sm font-semibold text-accent-ink transition-colors hover:ring-1 hover:ring-accent/40 disabled:cursor-not-allowed disabled:opacity-50'
 export const dangerButton =
-  'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-rejected-ink ring-1 ring-rejected-ink/30 transition-colors hover:bg-rejected'
+  'inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-rejected-ink ring-1 ring-rejected-ink/30 transition-colors hover:bg-rejected'
 export const linkClass = 'font-semibold text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent'

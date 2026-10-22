@@ -1,7 +1,6 @@
 @import 'tailwindcss';
-/* The font is bundled with the app (not loaded from Google Fonts), so the only external request stays Gemini.
-   One family for everything: its optical size axis adapts the letterforms from small text to big headings. */
-@import '@fontsource-variable/bricolage-grotesque';
+/* The font is bundled with the app (not loaded from Google Fonts), so the only external request stays Gemini. */
+@import '@fontsource-variable/ibm-plex-sans';
 
 /* dark: utilities follow a .dark class on <html> (set from the user's theme choice), not only the OS setting. */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -10,69 +9,71 @@
   Design tokens. Components use semantic names (bg-paper, text-muted, bg-applied…) and never raw colors,
   so light and dark mode switch here in one place instead of a dark: variant on every element.
 
-  Pastels carry meaning: every application status has its own colour, like tabs in a binder,
-  and the same colours mark skills you have (offer/mint) or miss (rejected/rose).
+  Earthy pastels that carry meaning: every application status has its own colour, like tabs in a binder,
+  and the same colours mark skills you have (offer/sage) or miss (rejected/clay).
   Each pastel has an "-ink" partner for text on top of it with sufficient contrast.
 */
 :root {
-  --paper: #f8f7fd;
-  --surface: #ffffff;
-  --sunken: #f1effa;
-  --line: #e5e2f2;
-  --ink: #221f3f;
-  --muted: #625e88;
-  --accent: #5a4bd1;
-  --accent-hover: #4a3cb8;
-  --accent-soft: #e8e4ff;
+  --paper: #f2f3ef; /* linen with a hint of green, deliberately not cream */
+  --surface: #fcfcfa;
+  --sunken: #e9ebe4;
+  --line: #dcdfd5;
+  --ink: #23261f;
+  --muted: #5f6558;
+  --accent: #2f5d50; /* pine */
+  --accent-hover: #244a40;
+  --accent-soft: #dce8e2;
+  --accent-ink: #24493f;
   --on-accent: #ffffff;
 
-  --saved: #fff1bf;
-  --saved-ink: #6b5700;
-  --applied: #dcebff;
-  --applied-ink: #1f4e86;
-  --interview: #e8e4ff;
-  --interview-ink: #4a3cb0;
-  --offer: #d4f2e3;
-  --offer-ink: #1b6a46;
-  --rejected: #ffdce4;
-  --rejected-ink: #962545;
-  --no-response: #e8eaf1;
-  --no-response-ink: #4b5168;
-  --peach: #ffe1cf;
-  --peach-ink: #8a3d10;
+  --saved: #ebe5d6; /* oat */
+  --saved-ink: #5a4f37;
+  --applied: #d9e3e8; /* dusty blue */
+  --applied-ink: #33525f;
+  --interview: #e7dce3; /* heather */
+  --interview-ink: #66425b;
+  --offer: #d6e5cd; /* sage */
+  --offer-ink: #2f5629;
+  --rejected: #f0d6cb; /* clay */
+  --rejected-ink: #8a3822;
+  --no-response: #e2e2dc; /* stone */
+  --no-response-ink: #52544c;
+  --peach: #f1dfbb; /* ochre, for things that need attention */
+  --peach-ink: #714c0c;
 }
 
 :root.dark {
-  --paper: #13112a;
-  --surface: #1b1935;
-  --sunken: #242143;
-  --line: #322e58;
-  --ink: #eceafb;
-  --muted: #aaa6cf;
-  --accent: #a99cff;
-  --accent-hover: #c0b6ff;
-  --accent-soft: #2d2860;
-  --on-accent: #13112a;
+  --paper: #161915;
+  --surface: #1e221d;
+  --sunken: #272c26;
+  --line: #343a32;
+  --ink: #e8eae3;
+  --muted: #a6ad9f;
+  --accent: #9fc7b6;
+  --accent-hover: #b8d8ca;
+  --accent-soft: #24372f;
+  --accent-ink: #bcdccd;
+  --on-accent: #142019;
 
-  --saved: #3a3317;
-  --saved-ink: #f5e49c;
-  --applied: #1b3150;
-  --applied-ink: #bddcff;
-  --interview: #2d2860;
-  --interview-ink: #d5cdff;
-  --offer: #163b2c;
-  --offer-ink: #b8edd2;
-  --rejected: #47202e;
-  --rejected-ink: #ffc8d3;
-  --no-response: #282b39;
-  --no-response-ink: #cbd0e0;
-  --peach: #43281b;
-  --peach-ink: #ffcfb2;
+  --saved: #36321f;
+  --saved-ink: #e8dcbc;
+  --applied: #1f2f37;
+  --applied-ink: #c3d8e2;
+  --interview: #352734;
+  --interview-ink: #e4cfdc;
+  --offer: #233421;
+  --offer-ink: #c5e0b8;
+  --rejected: #43261d;
+  --rejected-ink: #f1c4b4;
+  --no-response: #2b2d28;
+  --no-response-ink: #d0d2c9;
+  --peach: #3e3018;
+  --peach-ink: #f0d39b;
 }
 
 @theme inline {
-  --font-sans: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, sans-serif;
 
   --color-paper: var(--paper);
   --color-surface: var(--surface);
@@ -83,6 +84,7 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
   --color-on-accent: var(--on-accent);
 
   --color-saved: var(--saved);
@@ -113,11 +115,13 @@
   h2,
   h3 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 
+  /* Big page titles use Plex's narrower width for a tighter, more editorial headline. */
   h1 {
-    font-variation-settings: 'wdth' 90;
+    font-variation-settings: 'wdth' 88;
+    letter-spacing: -0.025em;
   }
 
   /* Clearly visible keyboard focus everywhere; mouse clicks do not show it. */

@@ -40,7 +40,7 @@ export function NextStepBanner({ page, onNavigate }: NextStepBannerProps) {
   if (!next || dismissed || page === 'home') return null
 
   return (
-    <div className="bg-accent-soft text-sm text-interview-ink">
+    <div className="bg-accent-soft text-sm text-accent-ink">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
         <span>
           Krok {next.number} z 3: <strong>{next.text}</strong>

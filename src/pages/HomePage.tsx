@@ -62,7 +62,7 @@ export function HomePage({ onNavigate }: { onNavigate: (page: Target, id?: strin
       )}
 
       {steps.some((step) => !step.done) && (
-        <section className="grid gap-6 rounded-3xl bg-accent-soft p-6 text-interview-ink sm:p-8 md:grid-cols-[1.2fr_1fr]">
+        <section className="grid gap-6 rounded-2xl bg-accent-soft p-6 text-accent-ink sm:p-8 md:grid-cols-[1.2fr_1fr]">
           <div>
             <h2 className="text-2xl font-bold">Vitaj v JobFit</h2>
             <p className="mt-3 max-w-prose">
@@ -141,7 +141,7 @@ export function HomePage({ onNavigate }: { onNavigate: (page: Target, id?: strin
           )}
         </Section>
 
-        <section aria-label="Štatistiky" className="rounded-3xl bg-surface p-5 ring-1 ring-line sm:p-7">
+        <section aria-label="Štatistiky" className="rounded-2xl bg-surface p-5 ring-1 ring-line sm:p-7">
           <dl className="space-y-6">
             <Stat
               label="Miera odpovede"

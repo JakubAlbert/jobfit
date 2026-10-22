@@ -22,6 +22,8 @@ const MAIN_PAGES: { id: PageId; label: string; icon: ComponentType<SVGProps<SVGS
   { id: 'profile', label: 'Profil', icon: ProfileIcon },
 ]
 
+const YEAR = new Date().getFullYear()
+
 /** A page, optionally with the id of an item to open on it. */
 interface Route {
   page: PageId
@@ -99,7 +101,7 @@ function App() {
 
       {/* The key remounts a page on every navigation, so it starts fresh and opens the requested item.
           It also resets the error boundary, so an error on one page does not block the others. */}
-      <main key={`${route.page}:${route.id ?? ''}`} className="mx-auto max-w-6xl px-4 pt-8 pb-28 md:pt-12 md:pb-16">
+      <main key={`${route.page}:${route.id ?? ''}`} className="mx-auto max-w-6xl px-4 pt-8 pb-12 md:pt-12 md:pb-16">
         <ErrorBoundary>
           {route.page === 'home' && <HomePage onNavigate={go} />}
           {route.page === 'applications' && (
@@ -117,6 +119,13 @@ function App() {
           {route.page === 'settings' && <SettingsPage />}
         </ErrorBoundary>
       </main>
+
+      <footer className="mx-auto max-w-6xl px-4 pb-28 text-sm text-muted md:pb-10">
+        <div className="flex flex-wrap justify-between gap-2 border-t border-line pt-6">
+          <p>© {YEAR} Jakub Albert</p>
+          <p>Dáta zostávajú v tvojom prehliadači.</p>
+        </div>
+      </footer>
 
       {/* Phones: thumb-reachable tab bar with icons, like a native app. */}
       <nav
