@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { db } from './db/db'
 import { ApplicationsPage } from './pages/ApplicationsPage'
 import { HomePage } from './pages/HomePage'
 import { PostingsPage } from './pages/PostingsPage'
@@ -27,7 +29,14 @@ function App() {
   const [route, setRoute] = useState<Route>({ page: 'home' })
   const go = (page: PageId, id?: string) => setRoute({ page, id })
 
+  const [storageBlocked, setStorageBlocked] = useState(false)
+
   useEffect(followSystemTheme, [])
+
+  // Some private browsing modes block IndexedDB; say so instead of failing silently later.
+  useEffect(() => {
+    db.open().catch(() => setStorageBlocked(true))
+  }, [])
 
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
@@ -48,22 +57,35 @@ function App() {
         </nav>
       </header>
 
-      {/* The key remounts a page on every navigation, so it starts fresh and opens the requested item. */}
+      {storageBlocked && (
+        <p
+          role="alert"
+          className="bg-amber-100 px-4 py-3 text-center text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+        >
+          Prehliadač nepovolil ukladanie dát (napríklad v súkromnom okne). Aplikácia bez neho nebude fungovať
+          správne. Otvor ju v bežnom okne.
+        </p>
+      )}
+
+      {/* The key remounts a page on every navigation, so it starts fresh and opens the requested item.
+          It also resets the error boundary, so an error on one page does not block the others. */}
       <main key={`${route.page}:${route.id ?? ''}`} className="mx-auto max-w-5xl px-4 py-6">
-        {route.page === 'home' && <HomePage onNavigate={go} />}
-        {route.page === 'applications' && (
-          <ApplicationsPage initialId={route.id} onOpenPosting={(id) => go('postings', id)} />
-        )}
-        {route.page === 'postings' && (
-          <PostingsPage
-            initialId={route.id}
-            onOpenProfile={() => go('profile')}
-            onOpenSettings={() => go('settings')}
-            onOpenApplication={(id) => go('applications', id)}
-          />
-        )}
-        {route.page === 'profile' && <ProfilePage onOpenSettings={() => go('settings')} />}
-        {route.page === 'settings' && <SettingsPage />}
+        <ErrorBoundary>
+          {route.page === 'home' && <HomePage onNavigate={go} />}
+          {route.page === 'applications' && (
+            <ApplicationsPage initialId={route.id} onOpenPosting={(id) => go('postings', id)} />
+          )}
+          {route.page === 'postings' && (
+            <PostingsPage
+              initialId={route.id}
+              onOpenProfile={() => go('profile')}
+              onOpenSettings={() => go('settings')}
+              onOpenApplication={(id) => go('applications', id)}
+            />
+          )}
+          {route.page === 'profile' && <ProfilePage onOpenSettings={() => go('settings')} />}
+          {route.page === 'settings' && <SettingsPage />}
+        </ErrorBoundary>
       </main>
     </div>
   )
