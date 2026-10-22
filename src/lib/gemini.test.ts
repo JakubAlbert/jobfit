@@ -119,28 +119,56 @@ describe('rate limiting (HTTP 429)', () => {
     vi.useFakeTimers({ toFake: ['setTimeout'] })
   })
 
+  // The status message is sent right before each backoff wait starts. Waiting for it (instead of
+  // assuming the request already happened) keeps the test independent of how fast the machine is:
+  // the SDK import and hashing before the first request take real time.
+  function statusRecorder() {
+    const messages: string[] = []
+    let resolveNext = () => {}
+    let next = Promise.resolve()
+    const expectNext = () => (next = new Promise<void>((resolve) => (resolveNext = resolve)))
+    const onStatus = (message: string) => {
+      messages.push(message)
+      resolveNext()
+    }
+    return { messages, onStatus, expectNext, waitForNext: () => next }
+  }
+
   it('backs off exponentially, tells the user, then succeeds', async () => {
-    const onStatus = vi.fn()
+    const status = statusRecorder()
     generateContent
       .mockRejectedValueOnce(rateLimited())
       .mockRejectedValueOnce(rateLimited())
       .mockResolvedValueOnce(reply({ skills: [] }))
 
-    const result = generateStructured(config, request({ onStatus, cache: false }), db)
-    await vi.advanceTimersByTimeAsync(RATE_LIMIT_DELAYS_MS[0])
-    expect(generateContent).toHaveBeenCalledTimes(2)
-    await vi.advanceTimersByTimeAsync(RATE_LIMIT_DELAYS_MS[1])
+    status.expectNext()
+    const result = generateStructured(config, request({ onStatus: status.onStatus, cache: false }), db)
+    for (const delay of RATE_LIMIT_DELAYS_MS.slice(0, 2)) {
+      await status.waitForNext()
+      status.expectNext()
+      await vi.advanceTimersByTimeAsync(delay)
+    }
 
     await expect(result).resolves.toEqual({ skills: [] })
-    expect(onStatus).toHaveBeenNthCalledWith(1, expect.stringContaining('o 2 s (pokus 1 z 4)'))
-    expect(onStatus).toHaveBeenNthCalledWith(2, expect.stringContaining('o 4 s (pokus 2 z 4)'))
+    expect(generateContent).toHaveBeenCalledTimes(3)
+    expect(status.messages).toEqual([
+      expect.stringContaining('o 2 s (pokus 1 z 4)'),
+      expect.stringContaining('o 4 s (pokus 2 z 4)'),
+    ])
   })
 
   it('gives up with a rate-limit error after all retries', async () => {
+    const status = statusRecorder()
     generateContent.mockRejectedValue(rateLimited())
 
-    const result = generateStructured(config, request({ cache: false }), db).catch((e) => e)
-    await vi.runAllTimersAsync()
+    status.expectNext()
+    const result = generateStructured(config, request({ onStatus: status.onStatus, cache: false }), db)
+      .catch((e) => e)
+    for (const delay of RATE_LIMIT_DELAYS_MS) {
+      await status.waitForNext()
+      status.expectNext()
+      await vi.advanceTimersByTimeAsync(delay)
+    }
 
     expect((await result).kind).toBe('rate-limit')
     expect(generateContent).toHaveBeenCalledTimes(RATE_LIMIT_DELAYS_MS.length + 1)
