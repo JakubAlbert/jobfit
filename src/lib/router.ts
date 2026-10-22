@@ -36,6 +36,11 @@ export function toHash({ page, id }: Route): string {
   return `${base}/${id === NEW_ID ? NEW_SLUG[page] : encodeURIComponent(id)}`
 }
 
+/** The route in the address bar; the overview where there is no browser (tests rendering in Node). */
+export function currentRoute(): Route {
+  return parseHash(globalThis.location?.hash ?? '')
+}
+
 /** Goes to a route. `replace` swaps the current history entry, so Back skips it (e.g. a submitted form). */
 export function navigate(route: Route, options: { replace?: boolean } = {}): void {
   const hash = toHash(route)

@@ -4,7 +4,7 @@ import { BoardIcon, HomeIcon, LogoMark, PostingIcon, ProfileIcon, SettingsIcon }
 import { NextStepBanner } from './components/NextStepBanner'
 import { ThemeSwitch } from './components/ThemeSwitch'
 import { db } from './db/db'
-import { navigate, parseHash, type PageId, type Route } from './lib/router'
+import { currentRoute, navigate, type PageId, type Route } from './lib/router'
 import { followSystemTheme } from './lib/theme'
 import { ApplicationsPage } from './pages/ApplicationsPage'
 import { HomePage } from './pages/HomePage'
@@ -24,12 +24,12 @@ const YEAR = new Date().getFullYear()
 
 function App() {
   // The address bar is the source of truth: links, Back/Forward and bookmarks all go through it.
-  const [route, setRoute] = useState<Route>(() => parseHash(window.location.hash))
+  const [route, setRoute] = useState<Route>(currentRoute)
   const go = (page: PageId, id?: string, options?: { replace?: boolean }) => navigate({ page, id }, options)
 
   useEffect(() => {
     const onHashChange = () => {
-      setRoute(parseHash(window.location.hash))
+      setRoute(currentRoute())
       window.scrollTo({ top: 0 })
     }
     window.addEventListener('hashchange', onHashChange)
